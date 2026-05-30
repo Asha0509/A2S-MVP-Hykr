@@ -174,6 +174,47 @@ const RoomCard = ({ room }) => {
                     )}
                 </div>
 
+                {room?.vastuOverlay?.violations?.length > 0 && (
+                    <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Award size={14} className="text-accent" />
+                            <span className="text-xs uppercase tracking-[0.2em] font-bold text-accent">
+                                Vastu HUD findings
+                            </span>
+                        </div>
+                        {room.vastuOverlay.summary && (
+                            <p className="text-sm text-main leading-relaxed italic">{room.vastuOverlay.summary}</p>
+                        )}
+                        <ul className="space-y-2">
+                            {room.vastuOverlay.violations.slice(0, 3).map((v, idx) => {
+                                const sev = v.severity || 'medium';
+                                const sevColor = sev === 'high' ? '#dc2626' : sev === 'medium' ? '#f59e0b' : '#16a34a';
+                                return (
+                                    <li key={idx} className="flex items-start gap-2 text-xs">
+                                        <span
+                                            className="mt-0.5 inline-block h-2 w-2 rounded-full shrink-0"
+                                            style={{ backgroundColor: sevColor }}
+                                            aria-hidden="true"
+                                        />
+                                        <div className="flex-1">
+                                            <p className="font-semibold text-main">{v.issue}</p>
+                                            <p className="text-muted mt-0.5">
+                                                <span className="text-accent font-semibold">Fix:</span> {v.fix}
+                                                {v.direction_hint && <span className="ml-2 text-accent">↑ {v.direction_hint}</span>}
+                                            </p>
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        {room.vastuOverlay.violations.length > 3 && (
+                            <p className="text-[11px] text-muted">
+                                + {room.vastuOverlay.violations.length - 3} more · open <span className="text-accent font-semibold">/vastu-hud</span> to see them drawn on the photo
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 <div>
                     <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
                         What's in this room

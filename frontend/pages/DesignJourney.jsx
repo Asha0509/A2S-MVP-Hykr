@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { stageRoom, getSampleBundle, analyseVastuScore, analyseVastuOverlay } from '../services/api';
 import VastuHUD from '../components/VastuHUD';
+import { DEMO_JOURNEY_PAYLOAD } from '../data/demoJourney';
 
 const SESSION_KEY = 'a2s-design-journey';
 const BUILDER_KEY = 'a2s-builder-account';
@@ -107,6 +108,25 @@ const DesignJourney = () => {
         }
         setError(null);
         setStep('style');
+    };
+
+    const handleTakeDemoTour = () => {
+        // Bypass the live FLUX/Vastu/catalog calls and jump straight to the
+        // summary with pre-fabricated, realistic state. Used for the
+        // recorded demo video — guaranteed to render in <100ms with no
+        // network dependency.
+        const payload = {
+            ...DEMO_JOURNEY_PAYLOAD,
+            builderName: builderName || DEMO_JOURNEY_PAYLOAD.builderName,
+            builderId: localStorage.getItem(ATTRIBUTED_KEY) || DEMO_JOURNEY_PAYLOAD.builderId,
+            generatedAt: new Date().toISOString(),
+        };
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+            navigate('/design/summary');
+        } catch (_) {
+            setError('Could not load demo tour — sessionStorage may be full.');
+        }
     };
 
     const handleConfirmStyle = () => {
@@ -333,14 +353,26 @@ const DesignJourney = () => {
                                 <AlertTriangle size={13} /> {error}
                             </p>
                         )}
-                        <button
-                            onClick={handleStartDesign}
-                            style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg font-semibold px-6 py-3 text-sm hover:opacity-90"
-                        >
-                            Continue
-                            <ArrowRight size={15} />
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                            <button
+                                onClick={handleStartDesign}
+                                style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg font-semibold px-6 py-3 text-sm hover:opacity-90"
+                            >
+                                Continue · upload my own photos
+                                <ArrowRight size={15} />
+                            </button>
+                            <span className="text-xs text-muted">or</span>
+                            <button
+                                onClick={handleTakeDemoTour}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-accent text-accent font-semibold px-6 py-3 text-sm hover:bg-accent/5"
+                            >
+                                Take the 1-click demo tour
+                            </button>
+                        </div>
+                        <p className="text-xs text-muted -mt-2">
+                            The demo tour pre-loads a sample 3 BHK staged in Contemporary style — no upload needed. Live mode runs FLUX-1-schnell on Cloudflare Workers AI; ~8 sec per room.
+                        </p>
                     </div>
                 )}
 
