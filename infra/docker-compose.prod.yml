@@ -38,8 +38,12 @@ services:
       context: ./LLM
       dockerfile: Dockerfile
     environment:
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_IMAGE_MODEL: ${GEMINI_IMAGE_MODEL:-gemini-2.5-flash-image}
+      # Cloudflare Workers AI is the staging backend (free tier — 10k
+      # neurons/day, no credit card). Replaces Gemini 2.5 Flash Image
+      # which required prepaid billing to issue any image-gen quota.
+      CF_ACCOUNT_ID: ${CF_ACCOUNT_ID:-}
+      CF_API_TOKEN: ${CF_API_TOKEN:-}
+      CF_IMG2IMG_MODEL: ${CF_IMG2IMG_MODEL:-@cf/runwayml/stable-diffusion-v1-5-img2img}
     # No host port binding — frontend nginx reaches the LLM service as
     # `http://a2s-llm:5001` on the docker network. See the backend block
     # above for the same rationale.
