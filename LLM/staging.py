@@ -46,6 +46,14 @@ FAL_IMG2IMG_MODEL = os.environ.get("FAL_IMG2IMG_MODEL", "fal-ai/flux/dev/image-t
 FAL_STRENGTH = float(os.environ.get("FAL_STRENGTH", "0.75"))
 FAL_STEPS = int(os.environ.get("FAL_STEPS", "28"))
 
+# Pollinations.ai — truly free FLUX-backed text-to-image. No API key,
+# no rate limit (community-funded). Used as the primary free tier when
+# fal.ai is exhausted or unconfigured. Text-to-image only, so it pairs
+# with the LLaVA vision pass to inject the user's room description into
+# the prompt.
+POLLINATIONS_ENABLED = os.environ.get("POLLINATIONS_ENABLED", "1") not in ("0", "false", "False", "")
+POLLINATIONS_MODEL = os.environ.get("POLLINATIONS_MODEL", "flux")
+
 CF_VISION_MODEL = os.environ.get("CF_VISION_MODEL", "@cf/llava-hf/llava-1.5-7b-hf")
 CF_FLUX_MODEL = os.environ.get("CF_FLUX_MODEL", "@cf/black-forest-labs/flux-1-schnell")
 
@@ -370,6 +378,32 @@ def _stage_with_sd15(resized_image_bytes: bytes, prompt: str) -> bytes:
 # ──────────────────────────────────────────────
 # Public API
 # ──────────────────────────────────────────────
+def _call_pollinations(prompt: str, width: int = 1024, height: int = 768) -> Optional[bytes]:
+    """Pollinations.ai FLUX-backed text-to-image. Free, no key, no rate limit."""
+    if not POLLINATIONS_ENABLED:
+        return None
+    from urllib.parse import quote
+    safe_prompt = quote(prompt[:1500], safe='')
+    url = (
+        f"https://image.pollinations.ai/prompt/{safe_prompt}"
+        f"?model={POLLINATIONS_MODEL}&width={width}&height={height}"
+        f"&nologo=true&private=true&enhance=true"
+    )
+    try:
+        resp = requests.get(url, timeout=120)
+    except requests.RequestException as exc:
+        _logger.warning("Pollinations network error: %s", exc)
+        return None
+    if resp.status_code != 200:
+        _logger.warning("Pollinations non-200: %s", resp.status_code)
+        return None
+    content_type = (resp.headers.get("Content-Type") or "").lower()
+    if not content_type.startswith("image/"):
+        _logger.warning("Pollinations returned non-image: %s", content_type)
+        return None
+    return resp.content
+
+
 def _call_fal_img2img(resized_image_bytes: bytes, prompt: str) -> Optional[bytes]:
     """fal.ai FLUX.1-dev image-to-image. SOTA. Returns PNG bytes or None on failure."""
     if not FAL_API_KEY:
@@ -432,8 +466,8 @@ def stage_room(
 ) -> dict:
     if not image_bytes:
         raise StagingError("No image bytes provided", status=400)
-    if not (FAL_API_KEY or (CF_ACCOUNT_ID and CF_API_TOKEN)):
-        raise StagingError("No staging backend configured (set FAL_API_KEY or CF_*)", status=500)
+    if not (FAL_API_KEY or POLLINATIONS_ENABLED or (CF_ACCOUNT_ID and CF_API_TOKEN)):
+        raise StagingError("No staging backend configured", status=500)
 
     style_key = (style or DEFAULT_STYLE).lower()
     room_key = (room_type or "").lower().strip()
@@ -456,14 +490,21 @@ def stage_room(
     pipeline = None
     model = None
 
-    # Path 1 — fal.ai FLUX.1-dev img2img (SOTA, preserves geometry).
+    # Path 1 — fal.ai FLUX.1-dev img2img (SOTA, preserves geometry, paid).
     if FAL_API_KEY:
         raw_image = _call_fal_img2img(resized, prompt)
         if raw_image:
             pipeline = "fal-flux-dev-img2img"
             model = FAL_IMG2IMG_MODEL
 
-    # Path 2 — Cloudflare FLUX-schnell text-to-image (LLaVA-conditioned).
+    # Path 2 — Pollinations.ai FLUX text-to-image (free, no key, no quota).
+    if raw_image is None:
+        raw_image = _call_pollinations(prompt, width=1024, height=768)
+        if raw_image:
+            pipeline = "pollinations-flux-t2i"
+            model = f"pollinations/{POLLINATIONS_MODEL}"
+
+    # Path 3 — Cloudflare FLUX-schnell text-to-image (LLaVA-conditioned).
     if raw_image is None and CF_ACCOUNT_ID and CF_API_TOKEN:
         try:
             raw_image = _call_flux(prompt)
@@ -474,7 +515,7 @@ def stage_room(
                 raise
             _logger.warning("CF FLUX failed: %s", exc)
 
-    # Path 3 — SD 1.5 img2img last-resort.
+    # Path 4 — SD 1.5 img2img last-resort.
     if raw_image is None and CF_ACCOUNT_ID and CF_API_TOKEN:
         try:
             raw_image = _stage_with_sd15(resized, prompt)
@@ -490,9 +531,10 @@ def stage_room(
         raise StagingError("All staging backends failed", status=502)
 
     image_b64 = base64.b64encode(raw_image).decode("ascii")
+    jpeg_pipelines = {"fal-flux-dev-img2img", "pollinations-flux-t2i"}
     result_payload = {
         "image_base64": image_b64,
-        "image_mime": "image/jpeg" if pipeline == "fal-flux-dev-img2img" else "image/png",
+        "image_mime": "image/jpeg" if pipeline in jpeg_pipelines else "image/png",
         "style": style_key,
         "room_type": room_key,
         "model": model,

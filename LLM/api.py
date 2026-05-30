@@ -33,7 +33,14 @@ from staging import (
     stage_room,
     StagingError,
     _resolve_flux_prompt,
+    _call_pollinations,
+    _call_flux,
     FAL_API_KEY,
+    POLLINATIONS_ENABLED,
+    POLLINATIONS_MODEL,
+    CF_ACCOUNT_ID,
+    CF_API_TOKEN,
+    CF_FLUX_MODEL,
     DEFAULT_STYLE,
 )
 from vastu_overlay import generate_vastu_overlay, OverlayError
@@ -252,57 +259,59 @@ def stage_from_prompt():
     room_type = (data.get('roomType') or data.get('room_type') or '').lower().strip()
     hint = data.get('hint') or data.get('notes')
 
-    if not FAL_API_KEY:
-        return jsonify({"error": "Text-to-image staging requires FAL_API_KEY"}), 500
-
     prompt = _resolve_flux_prompt(style, room_type, hint, vision_description=None)
     print(f"[STAGE-T2I] style={style!r} room={room_type!r} prompt_len={len(prompt)}")
 
-    fal_model = "fal-ai/flux/dev"
-    payload = {
-        "prompt": prompt,
-        "image_size": "landscape_4_3",
-        "num_inference_steps": 28,
-        "guidance_scale": 3.5,
-        "num_images": 1,
-        "enable_safety_checker": False,
-    }
-    headers = {
-        "Authorization": f"Key {FAL_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    try:
-        resp = _requests.post(
-            f"https://fal.run/{fal_model}",
-            headers=headers,
-            json=payload,
-            timeout=180,
-        )
-    except _requests.RequestException as exc:
-        print(f"[STAGE-T2I] network error: {exc}")
-        return jsonify({"error": f"fal.ai network error: {exc}"}), 502
+    raw_bytes = None
+    pipeline = None
+    model = None
 
-    if resp.status_code != 200:
-        print(f"[STAGE-T2I] fal.ai non-200: {resp.status_code} — {resp.text[:300]}")
-        return jsonify({"error": f"fal.ai returned HTTP {resp.status_code}"}), 502
+    # Tier 1 — Pollinations.ai (FLUX backend, free, no key, no quota).
+    if POLLINATIONS_ENABLED and raw_bytes is None:
+        raw_bytes = _call_pollinations(prompt, width=1024, height=768)
+        if raw_bytes:
+            pipeline = "pollinations-flux-t2i"
+            model = f"pollinations/{POLLINATIONS_MODEL}"
 
-    try:
-        body = resp.json() or {}
-    except ValueError:
-        return jsonify({"error": "fal.ai returned non-JSON body"}), 502
+    # Tier 2 — Cloudflare FLUX-schnell (free tier).
+    if raw_bytes is None and CF_ACCOUNT_ID and CF_API_TOKEN:
+        try:
+            raw_bytes = _call_flux(prompt)
+            pipeline = "cf-flux-schnell-t2i"
+            model = CF_FLUX_MODEL
+        except StagingError as exc:
+            print(f"[STAGE-T2I] CF FLUX failed: {exc}")
 
-    images = body.get("images") or []
-    if not images or not images[0].get("url"):
-        return jsonify({"error": "fal.ai returned no image"}), 502
+    # Tier 3 — fal.ai FLUX.1-dev (paid, may be exhausted).
+    if raw_bytes is None and FAL_API_KEY:
+        try:
+            resp = _requests.post(
+                "https://fal.run/fal-ai/flux/dev",
+                headers={"Authorization": f"Key {FAL_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "prompt": prompt,
+                    "image_size": "landscape_4_3",
+                    "num_inference_steps": 28,
+                    "guidance_scale": 3.5,
+                    "num_images": 1,
+                    "enable_safety_checker": False,
+                },
+                timeout=180,
+            )
+            if resp.status_code == 200:
+                body = resp.json() or {}
+                images = body.get("images") or []
+                if images and images[0].get("url"):
+                    img_resp = _requests.get(images[0]["url"], timeout=60)
+                    if img_resp.status_code == 200:
+                        raw_bytes = img_resp.content
+                        pipeline = "fal-flux-dev-t2i"
+                        model = "fal-ai/flux/dev"
+        except _requests.RequestException as exc:
+            print(f"[STAGE-T2I] fal.ai network error: {exc}")
 
-    img_url = images[0]["url"]
-    try:
-        img_resp = _requests.get(img_url, timeout=60)
-        if img_resp.status_code != 200:
-            return jsonify({"error": "Failed to fetch generated image"}), 502
-        raw_bytes = img_resp.content
-    except _requests.RequestException as exc:
-        return jsonify({"error": f"Image fetch failed: {exc}"}), 502
+    if raw_bytes is None:
+        return jsonify({"error": "All text-to-image backends failed"}), 502
 
     image_b64 = _base64.b64encode(raw_bytes).decode("ascii")
     result = {
@@ -310,8 +319,8 @@ def stage_from_prompt():
         "image_mime": "image/jpeg",
         "style": style,
         "room_type": room_type,
-        "model": fal_model,
-        "pipeline": "fal-flux-dev-t2i",
+        "model": model,
+        "pipeline": pipeline,
         "prompt": prompt,
         "vision_description": None,
         "caption": None,
