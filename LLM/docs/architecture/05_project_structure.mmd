@@ -1,0 +1,36 @@
+graph TB
+    subgraph "Project: A2S/"
+        APP["app.py<br/>(Streamlit entry point)"]
+        CFG["config.py"]
+        REQ["requirements.txt"]
+        README["README.md"]
+
+        subgraph "agent/"
+            A1["core.py<br/>(Main AI Agent class)"]
+            A2["intent.py<br/>(Intent classifier)"]
+            A3["entities.py<br/>(Entity extractor)"]
+            A4["context.py<br/>(Context manager)"]
+            A5["prompts.py<br/>(System prompts)"]
+        end
+
+        subgraph "data/"
+            D1["loader.py<br/>(Excel loader & merger)"]
+            D2["filter_engine.py<br/>(Smart filtering)"]
+            D3["ranker.py<br/>(Result ranking)"]
+        end
+
+        subgraph "utils/"
+            U1["formatters.py<br/>(Product card formatting)"]
+            U2["validators.py<br/>(Input validation)"]
+        end
+    end
+
+    APP --> A1
+    APP --> D1
+    A1 --> A2
+    A1 --> A3
+    A1 --> A4
+    A1 --> A5
+    D1 --> D2
+    D2 --> D3
+    APP --> U1

@@ -1,0 +1,65 @@
+# Secrets - NEVER commit these
+.env
+*.env
+!.env.example
+*.key
+*.pem
+credentials.json
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Java build output
+target/
+*.class
+
+# Frontend build
+node_modules/
+dist/
+dist-ssr/
+.next/
+.vite/
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Generated catalog outputs
+scraped_products_*.xlsx
+scraped_products_*.json
+LLM/scraped_products_*.xlsx
+LLM/scraped_products_*.json
+LLM/catalog_exports/
+LLM/output/
+LLM/scrape.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Claude / Cursor / agent tooling
+.claude/
+.cursor/
+.mcp.json
+.opencode.json
+.windsurfrules
+.cursorrules
+AGENTS.md
+
+# Personal / internal
+records/
+prompt.md
+overview.txt

@@ -1,0 +1,19 @@
+[
+  {
+    "name": "Premium Leather Sofa",
+    "brand": "Pepperfry",
+    "category": "sofa",
+    "roomType": "Living Room",
+    "aestheticStyle": "Contemporary",
+    "price": 45999,
+    "dimensions": "220x90x80 cm",
+    "color": "Black",
+    "colorHex": "#000000",
+    "material": "Leather",
+    "vendor": "Pepperfry",
+    "description": "High-quality leather sofa with comfortable seating",
+    "affiliateLink": "https://www.pepperfry.com/product/premium-sofa",
+    "image": "https://www.pepperfry.com/images/sofa.jpg",
+    "gallery": ["https://www.pepperfry.com/images/sofa.jpg"]
+  }
+]

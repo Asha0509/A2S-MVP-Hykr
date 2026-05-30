@@ -1,0 +1,12 @@
+# Cloudflare Pages redirects/rewrites.
+# Format: <from>  <to>  <status>
+# 200 = rewrite (URL stays the same in the browser), avoids CORS entirely.
+# 301/302 would change the visible URL.
+
+# Proxy /api/* to the Fly.io backend. The visible URL stays on the Pages domain
+# so the browser treats the call as same-origin and no preflight is needed.
+/api/*  https://a2s-backend.fly.dev/api/:splat  200
+
+# SPA fallback: any other unknown path serves index.html so client-side
+# routing handles it.
+/*      /index.html                              200

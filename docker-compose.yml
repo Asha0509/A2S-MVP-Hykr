@@ -1,0 +1,108 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: a2s-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-a2s_db}
+      POSTGRES_USER: ${POSTGRES_USER:-a2s_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-a2s_pass}
+    volumes:
+      - a2s-postgres-data:/var/lib/postgresql/data
+    networks:
+      - a2s-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-a2s_user} -d ${POSTGRES_DB:-a2s_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: a2s-backend:latest
+    container_name: a2s-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-a2s_db}
+      DB_USER: ${POSTGRES_USER:-a2s_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-a2s_pass}
+      DB_DRIVER: org.postgresql.Driver
+      DB_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-your-client-secret}
+      OAUTH2_REDIRECT_URI: ${OAUTH2_REDIRECT_URI:-http://localhost/#/login}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://127.0.0.1}
+      LLM_SERVICE_URL: http://llm:5001
+    networks:
+      - a2s-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      llm:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "java -version > /dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    image: a2s-frontend:latest
+    container_name: a2s-frontend
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_URL: http://backend:8080
+    networks:
+      - a2s-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  llm:
+    image: a2s-llm:latest
+    container_name: a2s-llm
+    ports:
+      - "5001:5001"
+    environment:
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-sonnet-4.6}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      VASTU_AUTO_MIN_CONFIDENCE: ${VASTU_AUTO_MIN_CONFIDENCE:-0.65}
+      VASTU_AUTO_TARGET_ACCURACY: ${VASTU_AUTO_TARGET_ACCURACY:-0.87}
+      FLASK_ENV: production
+      PORT: 5001
+    networks:
+      - a2s-network
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  admin:
+    image: a2s-admin:latest
+    container_name: a2s-admin
+    ports:
+      - "8501:8501"
+    environment:
+      BACKEND_URL: http://backend:8080
+    networks:
+      - a2s-network
+    depends_on:
+      - backend
+
+networks:
+  a2s-network:
+    driver: bridge
+
+volumes:
+  a2s-postgres-data:

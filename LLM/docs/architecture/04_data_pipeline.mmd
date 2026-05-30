@@ -1,0 +1,21 @@
+graph TB
+    subgraph "Raw Data"
+        F1["design_products_data.xlsx<br/>136 rows, 27 cols"]
+        F2["design_products_with_dimension.xlsx<br/>1014 rows, 27 cols"]
+    end
+
+    subgraph "ETL Processing"
+        MERGE["Merge & Deduplicate<br/>(union on product_id)"]
+        CLEAN["Data Cleaning<br/>- Drop null rows<br/>- Normalize dimensions<br/>- Fix brand names<br/>- Parse dimension string"]
+        ENRICH["Enrichment<br/>- Parse WxDxH from DIMENSION(CM)<br/>- Calculate price_per_unit<br/>- Category tagging"]
+    end
+
+    subgraph "Clean Catalog"
+        CAT["Product Catalog DataFrame<br/>~1,100+ unique products<br/>Indexed & searchable"]
+    end
+
+    F1 --> MERGE
+    F2 --> MERGE
+    MERGE --> CLEAN
+    CLEAN --> ENRICH
+    ENRICH --> CAT

@@ -1,0 +1,26 @@
+graph LR
+    subgraph "User Input"
+        MSG["Raw Message"]
+    end
+
+    subgraph "Intent Classification"
+        I1["PRODUCT_SEARCH<br/>'I need a bed'"]
+        I2["REFINE_SEARCH<br/>'Make it cheaper'"]
+        I3["DESIGN_ADVICE<br/>'What color for bedroom?'"]
+        I4["PRODUCT_DETAIL<br/>'Tell me more about this'"]
+        I5["GENERAL_CHAT<br/>'Hello / Thanks'"]
+        I6["COMPARISON<br/>'Compare these two'"]
+    end
+
+    subgraph "Entity Extraction"
+        E1["budget_range<br/>₹10k-30k"]
+        E2["room_type<br/>bedroom/living"]
+        E3["style<br/>modern/ethnic"]
+        E4["color_palette<br/>warm/cool/white"]
+        E5["product_type<br/>sofa/bed/lighting"]
+        E6["dimensions<br/>size preferences"]
+        E7["brand<br/>IKEA/Homesake"]
+    end
+
+    MSG --> I1 & I2 & I3 & I4 & I5 & I6
+    I1 & I2 --> E1 & E2 & E3 & E4 & E5 & E6 & E7

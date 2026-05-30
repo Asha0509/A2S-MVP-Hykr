@@ -1,0 +1,33 @@
+graph TB
+    subgraph "Frontend - Streamlit Web App"
+        UI["Chat Interface<br/>(Streamlit st.chat_message)"]
+        HIST["Chat History Display<br/>(Full Conversation)"]
+        CARDS["Product Cards<br/>(Image + Price + Link)"]
+    end
+
+    subgraph "AI Agent Core"
+        ROUTER["Intent Router<br/>(Classify user query)"]
+        NLU["NLU Parser<br/>(Extract: budget, room, style,<br/>color, size, product type)"]
+        CTX["Context Manager<br/>(Session State - Full History)"]
+        RESP["Response Generator<br/>(Natural language + products)"]
+    end
+
+    subgraph "Data Layer"
+        LOADER["Data Loader<br/>(Merge both Excel files)"]
+        FILTER["Smart Filter Engine<br/>(Budget/Color/Size/Style/Room)"]
+        RANK["Ranking Engine<br/>(Relevance scoring)"]
+        DB["Pandas DataFrame<br/>(In-memory product catalog)"]
+    end
+
+    UI -->|User Message| CTX
+    CTX -->|Message + History| ROUTER
+    ROUTER -->|Intent| NLU
+    NLU -->|Extracted Params| FILTER
+    FILTER -->|Query| DB
+    DB -->|Results| RANK
+    RANK -->|Top Products| RESP
+    RESP -->|Reply + Products| UI
+    RESP -->|Save to history| CTX
+    LOADER -->|Merged & Cleaned| DB
+    UI --- HIST
+    UI --- CARDS

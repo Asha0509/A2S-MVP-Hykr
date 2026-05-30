@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A2S: Aesthetics To Spaces</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            // Brand: Space Grotesk for display/headings, Inter for body/UI
+            serif: ['"Space Grotesk"', 'sans-serif'],
+            sans: ['"Inter"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            body: ['"Inter"', 'sans-serif'],
+          },
+          colors: {
+            // Brand palette (BrandAssets.pdf 2026)
+            'brand-primary':    '#1D6172', // Holiday Velvet — primary CTA, headings, logo
+            'brand-secondary':  '#B8763D', // Saucy Gold
+            'brand-surface':    '#EDEDEB', // Off White
+            'brand-text':       '#131A20', // River Styx
+            'brand-stone':      '#9CA3AF', // Rough Stone
+            'brand-abyssal':    '#414D58', // Abyssal
+            'brand-serene':     '#1497B8', // Serene Blue
+            'brand-red':        '#DC2626', // Whero Red
+            'brand-ochre':      '#CC9433', // Alameda Ochre
+            'brand-slate':      '#214462', // Dark Slate Blue
+            'brand-wheat':      '#C8865A', // Wheatberry
+            'brand-caramel':    '#DBAC7B', // Caramel Drizzle
+            'brand-chime':      '#EAEFF2', // Distant Wind Chime
+
+            // Legacy token names retained for component back-compat.
+            // Values remapped to brand palette so existing class refs
+            // (bg-a2s-gold, text-a2s-charcoal, etc.) render on-brand.
+            'a2s-gold':        '#1D6172', // -> Holiday Velvet
+            'a2s-gold-light':  '#B8763D', // -> Saucy Gold
+            'a2s-charcoal':    '#131A20', // -> River Styx
+            'a2s-cream':       '#EDEDEB', // -> Off White
+            'a2s-glass':       'rgba(255, 255, 255, 0.7)',
+          },
+          borderRadius: {
+            'a2s': '0.75rem',
+            'a2s-lg': '1rem',
+          },
+          boxShadow: {
+            'a2s':      '0 4px 24px -4px rgba(19, 26, 32, 0.08)',
+            'a2s-lg':   '0 12px 40px -8px rgba(19, 26, 32, 0.12)',
+            'a2s-gold': '0 4px 20px -2px rgba(29, 97, 114, 0.25)',
+            'brand':    '0 4px 24px -4px rgba(19, 26, 32, 0.08)',
+            'brand-lg': '0 12px 40px -8px rgba(19, 26, 32, 0.12)',
+          },
+          fontSize: {
+            // Brand type scale (BrandAssets.pdf)
+            'display':  ['48px', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
+            'h1':       ['40px', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '700' }],
+            'h2':       ['32px', { lineHeight: '1.2',  letterSpacing: '-0.01em', fontWeight: '700' }],
+            'h3':       ['24px', { lineHeight: '1.3',  letterSpacing: '-0.01em', fontWeight: '600' }],
+            'body':     ['16px', { lineHeight: '1.6' }],
+            'caption':  ['12px', { lineHeight: '1.4' }],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #EDEDEB; /* Off White — brand surface */
+      color: #131A20;            /* River Styx — brand text */
+      -webkit-font-smoothing: antialiased;
+      font-family: "Inter", sans-serif;
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.8) inset;
+    }
+
+    .luxury-shadow {
+      box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1D6172; /* Holiday Velvet */
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(29, 97, 114, 0.4);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1D6172; /* Holiday Velvet */
+      cursor: pointer;
+      border: none;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.jsx"></script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant U as User
+    participant C as Context Manager
+    participant A as AI Agent (LLM)
+    participant F as Filter Engine
+    participant D as Product Database
+
+    U->>C: "I need a sofa for my living room"
+    C->>C: Store message in session history
+    C->>A: Send full chat history + new message
+    A->>A: Extract: room=living_room, type=sofa
+    A->>F: Filter(room=living_room, type=sofa)
+    F->>D: Query DataFrame
+    D-->>F: 45 matching products
+    F-->>A: Top 5 ranked results
+    A-->>C: Response + products
+    C->>C: Store assistant response in history
+    C-->>U: "Here are 5 sofas for your living room..."
+
+    U->>C: "Under 30000 budget"
+    C->>C: Append to history
+    C->>A: Full history (includes prior context)
+    A->>A: Merge context: room=living_room, type=sofa, budget_max=30000
+    A->>F: Filter(room=living_room, type=sofa, budget≤30000)
+    F->>D: Query with accumulated filters
+    D-->>F: 12 matching products
+    F-->>A: Top 5 ranked results
+    A-->>C: Refined response + products
+    C-->>U: "Here are sofas under ₹30,000..."
+
+    U->>C: "Show me in warm colors"
+    C->>C: Append to history
+    C->>A: Full history (all prior context preserved)
+    A->>A: Merge: room=living, type=sofa, budget≤30k, color=warm
+    A->>F: Filter with all accumulated criteria
+    F-->>A: Top matches
+    A-->>C: Further refined results
+    C-->>U: "Warm-toned sofas under ₹30,000..."
