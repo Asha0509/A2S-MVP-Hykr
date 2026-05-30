@@ -52,7 +52,10 @@ services:
     image: a2s-frontend:latest
     container_name: a2s-frontend
     ports:
-      - "80:80"
+      # Bound to loopback so Caddy (on the host) owns 80/443 in prod and
+      # reverse-proxies to localhost:8000. For pure-Docker local dev,
+      # visit http://localhost:8000 instead of http://localhost.
+      - "127.0.0.1:8000:80"
     environment:
       VITE_API_URL: http://backend:8080
     networks:

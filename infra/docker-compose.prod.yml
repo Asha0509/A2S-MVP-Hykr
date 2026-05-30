@@ -52,8 +52,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:8000:80"
+    # Port binding lives in the base compose (127.0.0.1:8000:80) so Caddy
+    # on the host can claim 80/443 without fighting the container. Don't
+    # add `ports:` here — compose list-extension would duplicate the
+    # mapping and re-introduce the public 80 binding bug.
     deploy:
       resources:
         limits:
