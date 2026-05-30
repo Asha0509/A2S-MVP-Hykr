@@ -15,6 +15,8 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ThreeDSpace = lazy(() => import('./pages/ThreeDSpace'));
 const VastuScore = lazy(() => import('./pages/VastuScore'));
 const StageRoom = lazy(() => import('./pages/StageRoom'));
+const BuilderPortal = lazy(() => import('./pages/BuilderPortal'));
+const EmbedDemo = lazy(() => import('./pages/EmbedDemo'));
 const Waitlist = lazy(() => import('./pages/Waitlist'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
@@ -26,6 +28,26 @@ const ScrollToTop = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [pathname]);
+    return null;
+};
+
+// Capture ?builderId=... from the URL (any position) and pin it in localStorage
+// so the rest of the buyer session is attributed to the builder embedding A2S.
+const BuilderAttributionBootstrap = () => {
+    const { search, hash } = useLocation();
+    useEffect(() => {
+        const fromSearch = new URLSearchParams(search).get('builderId');
+        const fromWindow = new URLSearchParams(window.location.search).get('builderId');
+        let fromHash = null;
+        if (hash.includes('?')) {
+            fromHash = new URLSearchParams(hash.split('?')[1] || '').get('builderId');
+        }
+        const builderId = fromSearch || fromWindow || fromHash;
+        if (builderId && !/^[a-z0-9-]{3,80}$/.test(builderId)) return;
+        if (builderId) {
+            localStorage.setItem('a2s-attributed-builder', builderId);
+        }
+    }, [search, hash]);
     return null;
 };
 
@@ -76,6 +98,7 @@ const App = () => {
         <ErrorBoundary>
             <Router>
                 <ScrollToTop />
+                <BuilderAttributionBootstrap />
                 <OAuthTokenBootstrap />
                 <div className="flex flex-col min-h-screen">
                     <Navbar />
@@ -93,6 +116,8 @@ const App = () => {
                                 <Route path="/vastu-score" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
                                 <Route path="/vinsight" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
                                 <Route path="/stage" element={<ProtectedRoute><StageRoom /></ProtectedRoute>} />
+                                <Route path="/builder" element={<BuilderPortal />} />
+                                <Route path="/embed-demo" element={<EmbedDemo />} />
                                 <Route path="/3d-space" element={<ProtectedRoute><ThreeDSpace /></ProtectedRoute>} />
                                 <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

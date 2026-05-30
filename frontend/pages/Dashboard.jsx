@@ -261,12 +261,23 @@ const Dashboard = () => {
         );
     }
 
+    const attributedBuilder = (typeof window !== 'undefined' && localStorage.getItem('a2s-attributed-builder')) || '';
+    const builderLabel = attributedBuilder
+        ? attributedBuilder.split('-').slice(0, -1).join(' ').replace(/\b\w/g, (c) => c.toUpperCase())
+        : '';
+
     return (
         <div className="min-h-screen bg-main pb-20 relative overflow-hidden transition-all duration-1000">
             <div className="ambient-orb ambient-orb-1 opacity-40 blur-[120px]" />
             <div className="ambient-orb ambient-orb-2 opacity-40 blur-[120px]" />
 
             <div className="max-w-[1600px] mx-auto px-8 pt-32 lg:pt-40">
+                {attributedBuilder && (
+                    <div className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-xs">
+                        <span className="text-accent font-semibold uppercase tracking-wider">via {builderLabel || 'Builder Partner'}</span>
+                        <span className="text-muted">· Your buyer experience is hosted by A2S</span>
+                    </div>
+                )}
                 <header className="mb-10 animate-fade-in-up">
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
                         <div className="max-w-3xl">

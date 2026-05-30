@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Heart, User, Search, Box, X, LogOut, Palette, ChevronDown, PlayCircle, Sparkles, Lock, Wand2 } from 'lucide-react';
+import { Menu, Heart, User, Search, Box, X, LogOut, Palette, ChevronDown, PlayCircle, Sparkles, Lock, Wand2, Building2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import TutorialGuide from './TutorialGuide';
 import ConfirmationModal from './ConfirmationModal';
@@ -12,6 +12,7 @@ const NAV_LINKS = [
     { to: '/stage', label: 'AI Staging', icon: Wand2 },
     { to: '/vastu-score', label: 'Vastu Score', icon: Sparkles },
     { to: '/3d-space', label: '3D Space', icon: Box },
+    { to: '/builder', label: 'For Builders', icon: Building2 },
     { to: '/dashboard', label: 'Dashboard', authRequired: true },
 ];
 
