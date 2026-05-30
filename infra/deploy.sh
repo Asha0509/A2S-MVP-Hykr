@@ -14,6 +14,8 @@
 set -euo pipefail
 
 REPO_DIR=/opt/a2s
+COMPOSE="docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml"
+
 DROPLET_IP=$(curl -fsSL https://ipv4.icanhazip.com)
 DASHED_IP=${DROPLET_IP//./-}
 DOMAIN="${DASHED_IP}.sslip.io"
@@ -29,38 +31,40 @@ if [ ! -f .env ]; then
 fi
 echo "✓ .env present"
 
-# 2. Bring up the stack with the prod override
-echo "▶ Pulling base images + building services"
-docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml pull --quiet || true
-docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml build --pull
+# 2. Build images locally (compose builds because of the prod override)
+echo "▶ Building service images (will take ~5-7 min on a 4GB Droplet)"
+DOCKER_BUILDKIT=0 $COMPOSE build --pull
 
+# 3. Bring up stack (admin is in a profile, so it's skipped by default)
 echo "▶ Starting stack"
-docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml up -d --remove-orphans
+$COMPOSE up -d --remove-orphans
 
-# 3. Install the Caddyfile with the live IP substituted
+# 4. Install the Caddyfile with the live IP substituted
 echo "▶ Installing Caddyfile for $DOMAIN"
 sed "s/168-144-151-227/$DASHED_IP/g" infra/Caddyfile > /etc/caddy/Caddyfile
 caddy fmt --overwrite /etc/caddy/Caddyfile || true
 systemctl reload caddy
 
-# 4. Wait for backend to be ready before catalog seed
-echo "▶ Waiting for backend health (max 120s)"
-for i in $(seq 1 40); do
-    if curl -fsS -o /dev/null http://localhost:8080/api/products; then
+# 5. Wait for backend to be ready
+echo "▶ Waiting for backend health (max 180s — Spring Boot startup)"
+for i in $(seq 1 60); do
+    if curl -fsS -o /dev/null http://localhost:8080/api/products 2>/dev/null; then
         echo "  backend healthy after ${i} retries"
         break
     fi
     sleep 3
 done
 
-# 5. Show URL + container state
+# 6. Show URL + container state
 echo
 echo "════════════════════════════════════════════════════════════"
 echo "  ✓ Deploy complete"
 echo
 echo "  Public URL :  https://$DOMAIN"
-echo "  Direct API :  http://$DROPLET_IP:8080/api/products  (loopback only — needs SSH tunnel)"
 echo
 echo "  Containers:"
-docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml ps
+$COMPOSE ps
+echo
+echo "  Resource snapshot:"
+docker stats --no-stream --format "table {{.Container}}\t{{.MemUsage}}\t{{.CPUPerc}}"
 echo "════════════════════════════════════════════════════════════"

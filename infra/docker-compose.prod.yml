@@ -1,21 +1,71 @@
 # Production override for the DO Droplet deploy.
-# Caddy on the host listens on 80/443 and reverse-proxies to localhost:8000,
-# so the frontend container only binds the loopback interface here.
-# Apply with: docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml up -d
+#
+# Adds `build:` directives so `docker compose build` actually builds the
+# project-local images (`a2s-backend:latest` etc.) — the base compose file
+# uses `image:` only, which makes `compose pull` try to fetch from Docker Hub.
+#
+# Also binds every service to the loopback interface, so Caddy (on the host)
+# owns 80/443 and reverse-proxies to localhost:8000.
+#
+# Apply with:
+#   docker compose -f docker-compose.yml -f infra/docker-compose.prod.yml up -d --build
 
 services:
-  frontend:
-    ports:
-      - "127.0.0.1:8000:80"
+  postgres:
+    deploy:
+      resources:
+        limits:
+          memory: 384m
 
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m -XX:+UseSerialGC -XX:MaxRAMPercentage=70"
     ports:
       - "127.0.0.1:8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
 
   llm:
+    build:
+      context: ./LLM
+      dockerfile: Dockerfile
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_IMAGE_MODEL: ${GEMINI_IMAGE_MODEL:-gemini-2.5-flash-image}
     ports:
       - "127.0.0.1:5001:5001"
+    deploy:
+      resources:
+        limits:
+          memory: 768m
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8000:80"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  # Admin is not part of the public demo path; keep it off in prod to free RAM
+  # for the buyer/builder flows. Re-enable manually if you need the Streamlit
+  # console: `docker compose --profile admin up -d admin`.
   admin:
+    profiles: ["admin"]
+    build:
+      context: ./Admin
+      dockerfile: Dockerfile
     ports:
       - "127.0.0.1:8501:8501"
+    deploy:
+      resources:
+        limits:
+          memory: 384m
