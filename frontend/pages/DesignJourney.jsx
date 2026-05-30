@@ -4,7 +4,8 @@ import {
     CheckCircle2, Circle, Upload, Sparkles, ArrowRight, RefreshCw, AlertTriangle,
     Home, BedDouble, UtensilsCrossed, Flame, ChevronLeft, Award, Layers,
 } from 'lucide-react';
-import { stageRoom, getSampleBundle, analyseVastuScore } from '../services/api';
+import { stageRoom, getSampleBundle, analyseVastuScore, analyseVastuOverlay } from '../services/api';
+import VastuHUD from '../components/VastuHUD';
 
 const SESSION_KEY = 'a2s-design-journey';
 const BUILDER_KEY = 'a2s-builder-account';
@@ -133,19 +134,35 @@ const DesignJourney = () => {
             setStatus('scoring');
             let vastuScore = null;
             let vastuBandLabel = null;
+            let vastuOverlay = null;
+            // Prefer the new Vastu HUD overlay endpoint (returns specific
+            // violations + zone markers); fall back to the legacy /vastu/analyse
+            // numeric scoring if the overlay endpoint is unavailable.
             try {
-                const vForm = new FormData();
-                vForm.append('room_type', currentRoom.vastuRoom);
-                vForm.append('facing_direction', 'Auto detect');
-                vForm.append('floor', 'Ground');
-                vForm.append('images', uploadedFile, uploadedFile.name);
-                const vastu = await analyseVastuScore(vForm);
-                if (vastu && typeof vastu.score === 'number') {
-                    vastuScore = Math.round(vastu.score);
-                    vastuBandLabel = vastuBand(vastuScore).label;
+                vastuOverlay = await analyseVastuOverlay({
+                    image: uploadedFile,
+                    roomType: currentRoom.key,
+                    facing: 'N',
+                });
+                if (vastuOverlay && typeof vastuOverlay.score === 'number') {
+                    vastuScore = Math.round(vastuOverlay.score);
+                    vastuBandLabel = vastuOverlay.band || vastuBand(vastuScore).label;
                 }
             } catch (_) {
-                // Vastu is non-blocking — fall through with score=null
+                try {
+                    const vForm = new FormData();
+                    vForm.append('room_type', currentRoom.vastuRoom);
+                    vForm.append('facing_direction', 'Auto detect');
+                    vForm.append('floor', 'Ground');
+                    vForm.append('images', uploadedFile, uploadedFile.name);
+                    const vastu = await analyseVastuScore(vForm);
+                    if (vastu && typeof vastu.score === 'number') {
+                        vastuScore = Math.round(vastu.score);
+                        vastuBandLabel = vastuBand(vastuScore).label;
+                    }
+                } catch (_) {
+                    // Both attempts failed; continue without Vastu data
+                }
             }
 
             setStatus('bundling');
@@ -166,6 +183,7 @@ const DesignJourney = () => {
                 afterDataUrl: stagedDataUrl,
                 vastuScore,
                 vastuBand: vastuBandLabel,
+                vastuOverlay,
                 catalogBundle,
             };
             const updatedRooms = [...rooms, roomResult];
@@ -440,6 +458,22 @@ const DesignJourney = () => {
                                                 <figcaption className="text-[11px] text-accent uppercase tracking-wide font-semibold text-center mt-1">After · {style}</figcaption>
                                             </figure>
                                         </div>
+
+                                        {last?.vastuOverlay && last?.beforeDataUrl && (
+                                            <details className="rounded-2xl bg-main border border-premium p-4">
+                                                <summary className="cursor-pointer text-sm font-semibold text-main flex items-center gap-2">
+                                                    <span className="text-accent">Show the Vastu HUD on this room</span>
+                                                    <span className="text-xs text-muted">— compliance markers drawn on the photo</span>
+                                                </summary>
+                                                <div className="mt-4">
+                                                    <VastuHUD
+                                                        imageSrc={last.beforeDataUrl}
+                                                        overlay={last.vastuOverlay}
+                                                        loading={false}
+                                                    />
+                                                </div>
+                                            </details>
+                                        )}
 
                                         <div className="flex flex-wrap items-center gap-3 text-xs">
                                             {last?.vastuScore != null && (

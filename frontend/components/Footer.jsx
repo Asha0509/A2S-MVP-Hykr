@@ -40,24 +40,25 @@ const Footer = () => {
                             <h3 className="font-serif text-2xl font-black text-white italic tracking-tighter">A2S</h3>
                         </div>
                         <p className="text-muted text-sm leading-relaxed font-light">
-                            Democratizing bespoke interior design for every Indian home. High-fidelity visualization meets artisan sourcing.
+                            AI infrastructure for India's residential construction industry. Builders embed our buyer journey; their homebuyers walk away with a fully designed, Vastu-compliant home.
                         </p>
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Explore</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Product</h4>
                         <ul className="space-y-4 text-sm text-main/70 font-medium">
-                            <li><Link to="/gallery" className="hover:text-accent transition-all duration-300">Explore Gallery</Link></li>
-                            <li><Link to="/vastu-score" className="hover:text-accent transition-all duration-300">Vastu Score</Link></li>
-                            <li><Link to="/onboarding" className="hover:text-accent transition-all duration-300">Find Your Style</Link></li>
-                            <li><Link to="/waitlist" className="hover:text-accent transition-all duration-300">Phase 2 Waitlist</Link></li>
+                            <li><Link to="/builder" className="hover:text-accent transition-all duration-300">Builder Workspace</Link></li>
+                            <li><Link to="/design" className="hover:text-accent transition-all duration-300">Buyer Journey</Link></li>
+                            <li><Link to="/vastu-hud" className="hover:text-accent transition-all duration-300">Vastu HUD</Link></li>
+                            <li><Link to="/embed-demo" className="hover:text-accent transition-all duration-300">See the embed</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Company</h4>
                         <ul className="space-y-4 text-sm text-main/70 font-medium">
-                            <li><Link to="/dashboard" className="hover:text-accent transition-all duration-300">Dashboard</Link></li>
+                            <li><Link to="/about" className="hover:text-accent transition-all duration-300">About the founder</Link></li>
+                            <li><a href="https://github.com/Asha0509/A2S-MVP-Hykr" target="_blank" rel="noopener" className="hover:text-accent transition-all duration-300">Open source on GitHub</a></li>
                             <li><Link to="/privacy-policy" className="hover:text-accent transition-all duration-300">Privacy Policy</Link></li>
                             <li><Link to="/terms-of-service" className="hover:text-accent transition-all duration-300">Terms & Conditions</Link></li>
                         </ul>
@@ -81,36 +82,14 @@ const Footer = () => {
                         </div>
                         
                         <div className="mt-8">
-                            <p className="text-[10px] font-black text-muted uppercase tracking-[0.3em] mb-4">Design Tips</p>
-                            <form onSubmit={handleSubscribe} className="relative group">
-                                <div className="flex rounded-[20px] overflow-hidden border border-white/10 group-hover:border-accent/40 bg-surface focus-within:ring-2 focus-within:ring-accent/20 transition-all duration-500">
-                                    <input 
-                                        type="email" 
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Enter your email" 
-                                        className="bg-transparent text-main text-xs px-5 py-4 w-full focus:outline-none placeholder:text-white/20 font-medium" 
-                                        required
-                                    />
-                                    <button 
-                                        type="submit" 
-                                        disabled={status === 'loading'}
-                                        className="bg-accent text-on-accent px-6 py-4 text-xs font-black uppercase tracking-widest hover:bg-accent/90 transition-all active:scale-95 disabled:opacity-50"
-                                    >
-                                        {status === 'loading' ? '...' : 'Go'}
-                                    </button>
-                                </div>
-                                {status === 'success' && (
-                                    <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-emerald-400 animate-fade-in uppercase tracking-widest">
-                                        <CheckCircle2 size={14} /> {message}
-                                    </div>
-                                )}
-                                {status === 'error' && (
-                                    <div className="mt-4 text-[10px] font-bold text-rose-500 animate-fade-in uppercase tracking-widest">
-                                        {message}
-                                    </div>
-                                )}
-                            </form>
+                            <p className="text-[10px] font-black text-muted uppercase tracking-[0.3em] mb-4">Talk to the founder</p>
+                            <Link
+                                to="/about"
+                                className="block rounded-[20px] border border-white/10 hover:border-accent/40 bg-surface px-5 py-4 text-xs font-semibold text-main hover:text-accent transition-all duration-500"
+                            >
+                                Builder pilots, press, partnerships
+                                <span className="text-accent ml-1">→</span>
+                            </Link>
                         </div>
                     </div>
                 </div>
