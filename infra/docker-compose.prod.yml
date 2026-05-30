@@ -23,8 +23,11 @@ services:
       dockerfile: Dockerfile
     environment:
       JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m -XX:+UseSerialGC -XX:MaxRAMPercentage=70"
-    ports:
-      - "127.0.0.1:8080:8080"
+    # No host port binding — nginx (in the frontend container) reaches
+    # the backend over the docker network as `http://a2s-backend:8080`.
+    # Binding 127.0.0.1:8080 here triggers "address already in use" errors
+    # on Droplet rebuilds when stale iptables NAT rules survive a failed
+    # container start. Use `docker exec` for debugging.
     deploy:
       resources:
         limits:
@@ -37,8 +40,9 @@ services:
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_IMAGE_MODEL: ${GEMINI_IMAGE_MODEL:-gemini-2.5-flash-image}
-    ports:
-      - "127.0.0.1:5001:5001"
+    # No host port binding — frontend nginx reaches the LLM service as
+    # `http://a2s-llm:5001` on the docker network. See the backend block
+    # above for the same rationale.
     deploy:
       resources:
         limits:
