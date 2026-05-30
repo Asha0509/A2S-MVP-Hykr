@@ -8,7 +8,7 @@ import { MapPin, IndianRupee, Bed, Bath, Maximize2, ChevronRight, ExternalLink }
  * builder's id pinned to the URL.
  *
  * This page is intentionally styled like a generic real-estate landing
- * page (Lodha/Prestige/Brigade vibe), NOT like A2S — the point is to show
+ * page (generic premium Indian real-estate vibe), NOT like A2S — the point is to show
  * that A2S can drop into any builder site without clashing.
  */
 
@@ -132,7 +132,7 @@ const EmbedDemo = () => {
                         >
                             <div style={{ color: 'rgba(244,235,221,0.4)' }} className="text-center">
                                 <p className="text-[10px] uppercase tracking-[0.4em] mb-2">Render</p>
-                                <p className="font-serif italic text-2xl">Aerial view · Lodha Greens · 8 acres</p>
+                                <p className="font-serif italic text-2xl">Aerial view · {builder.projectName} · 8 acres</p>
                             </div>
                         </div>
                     </div>

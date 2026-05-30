@@ -10,13 +10,22 @@ Builders embed A2S in their project landing pages. Their homebuyers then design 
 
 ## Live demo
 
-| | URL |
+| Surface | URL |
 |---|---|
 | Public app | <https://168-144-151-227.sslip.io> |
-| Builder portal | <https://168-144-151-227.sslip.io/#/builder> |
-| "Build My Home" buyer journey | <https://168-144-151-227.sslip.io/#/design> |
-| Embed preview (fake builder site) | <https://168-144-151-227.sslip.io/#/embed-demo> |
+| Founder / About | <https://168-144-151-227.sslip.io/#/about> |
+| Builder workspace | <https://168-144-151-227.sslip.io/#/builder> |
+| Buyer journey (live FLUX-1-schnell) | <https://168-144-151-227.sslip.io/#/design> |
+| Buyer journey (instant demo tour) | <https://168-144-151-227.sslip.io/#/design> → "Take the 1-click demo tour" |
+| Vastu HUD (the visible USP) | <https://168-144-151-227.sslip.io/#/vastu-hud> |
+| Embed preview (fictional builder) | <https://168-144-151-227.sslip.io/#/embed-demo> |
 | 2-min walkthrough video | _added on submission_ |
+
+The demo tour is the recommended path for first-time reviewers — it
+pre-loads a 4-room sample 3 BHK in Contemporary style with realistic
+Vastu HUD findings and a costed shopping list. Live mode uses
+Cloudflare Workers AI (LLaVA + FLUX-1-schnell) for actual room
+staging from any uploaded photo.
 
 Hosted on a single DigitalOcean Droplet (Bangalore region, 4 GB / 2 vCPU) running the full Docker Compose stack behind Caddy with auto-issued Let's Encrypt TLS. No managed cloud services in the critical path — everything is reproducible from `docker compose up`.
 
