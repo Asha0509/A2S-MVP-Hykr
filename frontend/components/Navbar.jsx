@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const NAV_LINKS = [
     { to: '/', label: 'Home' },
     { to: '/builder', label: 'For Builders', icon: Building2 },
+    { to: '/pricing', label: 'Pricing' },
     { to: '/design', label: 'Build My Home', icon: Layers },
     { to: '/vastu-hud', label: 'Vastu HUD', icon: Compass },
     { to: '/embed-demo', label: 'Embed Demo', icon: Eye },
