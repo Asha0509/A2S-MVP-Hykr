@@ -115,20 +115,20 @@ const BuilderPortal = () => {
     if (!account) {
         return (
             <div className="min-h-screen bg-main">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-wide uppercase mb-3">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-12">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-wide uppercase mb-3">
                         <Building2 size={14} />
                         Builder workspace · 30-second setup
                     </div>
-                    <h1 className="font-serif text-4xl sm:text-5xl text-main leading-tight font-black italic">
+                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-main leading-tight font-black italic">
                         Activate the <span className="text-accent">AI design layer</span> on your project page.
                     </h1>
-                    <p className="mt-4 text-muted max-w-2xl">
+                    <p className="mt-4 text-sm sm:text-base text-muted max-w-2xl">
                         Create a workspace, pick the brands you have deals with, drop the embed snippet on your project landing page.
                         Your buyers self-serve the design experience — and every catalog click is attributed back to your account.
                     </p>
 
-                    <div className="mt-8 grid sm:grid-cols-3 gap-3">
+                    <div className="mt-7 sm:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         {[
                             { icon: Sparkles, title: 'Live the day you embed', body: 'No integration, no SSO, no DNS. Drop a snippet, your buyers are designing within the hour.' },
                             { icon: CheckCircle2, title: 'Vastu sells in India', body: 'Real-time Vastu compliance markers on every buyer\'s room photo — a category-defining differentiator.' },
@@ -224,14 +224,14 @@ const BuilderPortal = () => {
     // Authenticated builder dashboard
     return (
         <div className="min-h-screen bg-main">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-10 space-y-8">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-wide uppercase mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-wide uppercase mb-3">
                             <Building2 size={14} />
                             Builder workspace
                         </div>
-                        <h1 className="font-serif text-3xl sm:text-4xl text-main font-black italic">
+                        <h1 className="font-serif text-2xl sm:text-4xl text-main font-black italic break-words">
                             {account.companyName}
                         </h1>
                         <p className="text-muted mt-1">
@@ -247,7 +247,7 @@ const BuilderPortal = () => {
                 </div>
 
                 {/* KPI strip — empty state, populated by real engagement events */}
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {KPI_SLOTS.map(({ icon: Icon, label, hint }) => (
                         <div key={label} className="rounded-2xl bg-surface border border-premium p-4">
                             <div className="flex items-center justify-between mb-2">
@@ -494,9 +494,9 @@ const BuilderRoi = () => {
 
             <div className="rounded-xl bg-accent/5 border border-accent/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-accent">Builder's share (75% of commission)</p>
-                    <p className="font-serif text-4xl sm:text-5xl text-main font-black italic leading-none mt-2 flex items-baseline gap-1">
-                        <IndianRupee size={32} className="text-accent" />
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-accent">Builder's share (75% of commission)</p>
+                    <p className="font-serif text-3xl sm:text-5xl text-main font-black italic leading-none mt-2 flex items-baseline gap-1">
+                        <IndianRupee size={28} className="text-accent" />
                         <span>{(builderCut / 100000).toFixed(2)}L</span>
                     </p>
                 </div>

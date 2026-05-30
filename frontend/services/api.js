@@ -345,6 +345,35 @@ export const stageRoom = async ({ image, style, roomType, hint }) => {
     }
 };
 // ============================================
+// AI ROOM STAGING — TEXT-TO-IMAGE (Floor-Plan / Pre-Possession Flow)
+// ============================================
+// Used when the buyer has only a floor plan (no unit photos yet). Hits the
+// /api/stage/from-prompt endpoint which calls fal.ai FLUX.1-dev text-to-image
+// with a style + room-type prompt. Returns the same response shape as stageRoom.
+export const stageFromPrompt = async ({ style, roomType, hint }) => {
+    try {
+        const response = await api.post(
+            '/stage/from-prompt',
+            { style, roomType, hint },
+            { headers: { 'Content-Type': 'application/json' }, timeout: 180000 },
+        );
+        return response.data;
+    } catch (error) {
+        const status = error.response?.status;
+        const payload = error.response?.data || {};
+        if (status === 429) {
+            const wait = payload.retry_after ? `${payload.retry_after}s` : 'about a minute';
+            throw {
+                error: payload.error || `fal.ai is rate-limited right now. Try again in ${wait}.`,
+                retry_after: payload.retry_after,
+                rateLimited: true,
+            };
+        }
+        throw payload.error ? payload : { error: 'AI staging from floor plan failed. Please try again.' };
+    }
+};
+
+// ============================================
 // WAITLIST
 // ============================================
 

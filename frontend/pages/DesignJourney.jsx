@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
     CheckCircle2, Circle, Upload, Sparkles, ArrowRight, RefreshCw, AlertTriangle,
     Home, BedDouble, UtensilsCrossed, Flame, ChevronLeft, Award, Layers,
+    Map, Camera, FileImage,
 } from 'lucide-react';
-import { stageRoom, getSampleBundle, analyseVastuScore, analyseVastuOverlay } from '../services/api';
+import { stageRoom, stageFromPrompt, getSampleBundle, analyseVastuScore, analyseVastuOverlay } from '../services/api';
 import VastuHUD from '../components/VastuHUD';
 import { DEMO_JOURNEY_PAYLOAD } from '../data/demoJourney';
 
@@ -28,6 +29,51 @@ const STYLES = [
     { value: 'functional',   label: 'Functional',   blurb: 'Scandinavian: modular, light wood, accent.' },
 ];
 
+// ────────────────────────────────────────────
+// Floor-plan mode (pre-possession buyers)
+// Three hardcoded "typical Indian flat" plans. Each plan dictates which
+// rooms exist — we run text-to-image (no source photo needed) for each.
+// ────────────────────────────────────────────
+const svgPlanUri = (svg) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+
+const FLOOR_PLANS = [
+    {
+        key: '1bhk',
+        label: '1 BHK · 540 sq ft',
+        blurb: 'Compact starter unit. Common in Pune, Hyderabad outskirts.',
+        roomKeys: ['living_room', 'bedroom', 'kitchen'],
+        svg: svgPlanUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#F4EBDD"/><rect x="20" y="20" width="360" height="260" fill="none" stroke="#1D6172" stroke-width="3"/><line x1="220" y1="20" x2="220" y2="170" stroke="#1D6172" stroke-width="2"/><line x1="220" y1="170" x2="380" y2="170" stroke="#1D6172" stroke-width="2"/><text x="120" y="100" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">LIVING</text><text x="120" y="118" text-anchor="middle" font-size="10" fill="#6B5E45">12'×14'</text><text x="300" y="95" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">BEDROOM</text><text x="300" y="113" text-anchor="middle" font-size="10" fill="#6B5E45">10'×11'</text><text x="300" y="225" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">KITCHEN</text><text x="300" y="243" text-anchor="middle" font-size="10" fill="#6B5E45">7'×9'</text><text x="120" y="225" text-anchor="middle" font-size="11" fill="#B8763D" font-family="Inter, sans-serif">DINING NICHE</text></svg>`),
+    },
+    {
+        key: '2bhk',
+        label: '2 BHK · 820 sq ft',
+        blurb: 'Most-sold Indian configuration. Couple + nursery / WFH.',
+        roomKeys: ['living_room', 'bedroom', 'bedroom_2', 'kitchen'],
+        svg: svgPlanUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#F4EBDD"/><rect x="20" y="20" width="360" height="260" fill="none" stroke="#1D6172" stroke-width="3"/><line x1="200" y1="20" x2="200" y2="160" stroke="#1D6172" stroke-width="2"/><line x1="20" y1="160" x2="380" y2="160" stroke="#1D6172" stroke-width="2"/><line x1="200" y1="160" x2="200" y2="280" stroke="#1D6172" stroke-width="2"/><text x="110" y="90" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">LIVING</text><text x="110" y="108" text-anchor="middle" font-size="10" fill="#6B5E45">13'×14'</text><text x="290" y="90" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">MASTER</text><text x="290" y="108" text-anchor="middle" font-size="10" fill="#6B5E45">11'×12'</text><text x="110" y="220" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">KITCHEN</text><text x="110" y="238" text-anchor="middle" font-size="10" fill="#6B5E45">8'×10'</text><text x="290" y="220" text-anchor="middle" font-size="13" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">BEDROOM 2</text><text x="290" y="238" text-anchor="middle" font-size="10" fill="#6B5E45">10'×11'</text></svg>`),
+    },
+    {
+        key: '3bhk',
+        label: '3 BHK · 1,250 sq ft',
+        blurb: 'Premium family unit. Includes a dedicated pooja room.',
+        roomKeys: ['living_room', 'bedroom', 'bedroom_2', 'bedroom_3', 'kitchen', 'pooja_room'],
+        svg: svgPlanUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#F4EBDD"/><rect x="20" y="20" width="360" height="260" fill="none" stroke="#1D6172" stroke-width="3"/><line x1="170" y1="20" x2="170" y2="160" stroke="#1D6172" stroke-width="2"/><line x1="270" y1="20" x2="270" y2="160" stroke="#1D6172" stroke-width="2"/><line x1="20" y1="160" x2="380" y2="160" stroke="#1D6172" stroke-width="2"/><line x1="140" y1="160" x2="140" y2="280" stroke="#1D6172" stroke-width="2"/><line x1="270" y1="160" x2="270" y2="280" stroke="#1D6172" stroke-width="2"/><line x1="270" y1="220" x2="380" y2="220" stroke="#1D6172" stroke-width="2"/><text x="95" y="90" text-anchor="middle" font-size="12" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">LIVING</text><text x="220" y="90" text-anchor="middle" font-size="11" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">MASTER</text><text x="325" y="90" text-anchor="middle" font-size="11" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">BED 2</text><text x="80" y="220" text-anchor="middle" font-size="11" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">KITCHEN</text><text x="205" y="220" text-anchor="middle" font-size="11" fill="#1D6172" font-family="Inter, sans-serif" font-weight="700">BED 3</text><text x="325" y="195" text-anchor="middle" font-size="10" fill="#B8763D" font-family="Inter, sans-serif" font-weight="700">POOJA</text><text x="325" y="255" text-anchor="middle" font-size="10" fill="#1D6172" font-family="Inter, sans-serif">DINING</text></svg>`),
+    },
+];
+
+// Map plan room-keys (which may include numbered bedrooms) to display labels.
+const PLAN_ROOM_LABELS = {
+    living_room: 'Living Room',
+    bedroom: 'Master Bedroom',
+    bedroom_2: 'Bedroom 2',
+    bedroom_3: 'Bedroom 3',
+    kitchen: 'Kitchen',
+    pooja_room: 'Pooja Room',
+};
+
+// Translate numbered bedroom keys back to the canonical 'bedroom' room-type
+// so the staging backend's prompt overlays still match.
+const canonicalRoomType = (key) => (key.startsWith('bedroom') ? 'bedroom' : key);
+
 const vastuBand = (score) => {
     if (score == null) return { label: '—', color: '#9CA3AF' };
     if (score < 50) return { label: 'Poor', color: '#dc2626' };
@@ -40,7 +86,9 @@ const blobUrlFromDataUrl = (dataUrl) => dataUrl; // already-encoded; <img> handl
 
 const DesignJourney = () => {
     const navigate = useNavigate();
-    const [step, setStep] = useState('rooms'); // rooms | style | design | wrapUp
+    // Step machine — photo flow uses rooms|style|design; floor-plan flow
+    // uses plan|plan-style|plan-stage. Both end at /design/summary.
+    const [step, setStep] = useState('mode'); // mode | rooms | style | design | plan | plan-style | plan-stage
     const [selectedRooms, setSelectedRooms] = useState(['living_room', 'bedroom', 'kitchen', 'pooja_room']);
     const [style, setStyle] = useState('modern');
     const [rooms, setRooms] = useState([]);     // accumulated results
@@ -49,6 +97,12 @@ const DesignJourney = () => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [status, setStatus] = useState('idle'); // idle | staging | scoring | bundling | done | error
     const [error, setError] = useState(null);
+
+    // Floor-plan flow state
+    const [selectedPlan, setSelectedPlan] = useState(null); // one of FLOOR_PLANS or { custom: true, previewUrl, roomKeys }
+    const [planUploadFile, setPlanUploadFile] = useState(null);
+    const [planUploadPreview, setPlanUploadPreview] = useState(null);
+    const [planProgress, setPlanProgress] = useState({ current: 0, total: 0, label: '' });
 
     const builderName = useMemo(() => {
         // Prefer the builder workspace this browser created; fall back to the
@@ -261,18 +315,131 @@ const DesignJourney = () => {
     };
 
     // ────────────────────────────────────────────
+    // Floor-plan flow handlers
+    // ────────────────────────────────────────────
+    const handlePlanFileUpload = (file) => {
+        if (!file) return;
+        // Accept image + PDF; PDF preview falls back to a generic icon.
+        const isImage = file.type.startsWith('image/');
+        const isPdf = file.type === 'application/pdf';
+        if (!isImage && !isPdf) {
+            setError('Please upload a JPG, PNG or PDF floor plan.');
+            return;
+        }
+        setError(null);
+        setPlanUploadFile(file);
+        setPlanUploadPreview((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return isImage ? URL.createObjectURL(file) : null;
+        });
+        // For an uploaded plan we default to a 2-BHK room set — the buyer can
+        // still pick a different hardcoded plan if this guess is wrong.
+        setSelectedPlan({
+            custom: true,
+            key: 'custom',
+            label: 'Your uploaded plan',
+            roomKeys: ['living_room', 'bedroom', 'kitchen'],
+            previewUrl: isImage ? URL.createObjectURL(file) : null,
+        });
+    };
+
+    const handlePickPlan = (plan) => {
+        setError(null);
+        setSelectedPlan(plan);
+    };
+
+    const handleConfirmPlan = () => {
+        if (!selectedPlan) {
+            setError('Pick a floor plan or upload your own.');
+            return;
+        }
+        setError(null);
+        setStep('plan-style');
+    };
+
+    const runPlanStaging = async () => {
+        if (!selectedPlan) return;
+        setError(null);
+        setStep('plan-stage');
+        const roomKeys = selectedPlan.roomKeys || [];
+        const accumulated = [];
+        for (let i = 0; i < roomKeys.length; i++) {
+            const roomKey = roomKeys[i];
+            const roomLabel = PLAN_ROOM_LABELS[roomKey] || roomKey;
+            const canonical = canonicalRoomType(roomKey);
+            setPlanProgress({ current: i + 1, total: roomKeys.length, label: roomLabel });
+            try {
+                const staged = await stageFromPrompt({
+                    style,
+                    roomType: canonical,
+                    hint: `Indian ${roomLabel.toLowerCase()}, ${style} style, designed for a ${selectedPlan.label || 'new flat'}`,
+                });
+                const catalogBundle = await getSampleBundle({
+                    roomType: canonical,
+                    style,
+                    brands: builderBrands,
+                    limit: 6,
+                }).catch(() => ({ items: [], totalEstimate: 0, currency: 'INR' }));
+
+                const stagedDataUrl = `data:${staged.image_mime || 'image/jpeg'};base64,${staged.image_base64}`;
+                accumulated.push({
+                    roomType: canonical,
+                    roomLabel,
+                    beforeDataUrl: null, // pre-possession — no original photo exists
+                    afterDataUrl: stagedDataUrl,
+                    vastuScore: null,
+                    vastuBand: null,
+                    vastuOverlay: null,
+                    catalogBundle,
+                });
+            } catch (err) {
+                console.error('[journey] plan staging failed for', roomKey, err);
+                // Continue with remaining rooms; surface a soft error at the end.
+                setError((prev) => prev || `Couldn't stage ${roomLabel}. The rest of the home will still load.`);
+            }
+        }
+        // Persist + jump to summary
+        const payload = {
+            builderId: localStorage.getItem(ATTRIBUTED_KEY) || (() => {
+                try { return JSON.parse(localStorage.getItem(BUILDER_KEY) || '{}')?.builderId || null; } catch (_) { return null; }
+            })(),
+            builderName,
+            style,
+            rooms: accumulated,
+            preferredBrands: builderBrands,
+            generatedAt: new Date().toISOString(),
+            source: 'floor-plan',
+            planKey: selectedPlan.key,
+        };
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+        } catch (_) {
+            // quota fallback — drop bundles
+            const slim = { ...payload, rooms: accumulated.map((r) => ({ ...r, catalogBundle: { items: [], totalEstimate: 0, currency: 'INR' } })) };
+            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(slim)); } catch (_) { /* give up */ }
+        }
+        if (accumulated.length === 0) {
+            setError('No rooms could be staged. Try the demo tour or switch to photo mode.');
+            setStep('plan');
+            return;
+        }
+        navigate('/design/summary');
+    };
+
+    // ────────────────────────────────────────────
     // Render
     // ────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-main">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-10">
                 {/* Header */}
                 <div className="mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-wide uppercase mb-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-wide uppercase mb-3">
                         <Layers size={14} />
                         Build Your Home {builderName ? `· for ${builderName}` : ''}
                     </div>
-                    <h1 className="font-serif text-3xl sm:text-5xl text-main leading-tight font-black italic">
+                    <h1 className="font-serif text-2xl sm:text-5xl text-main leading-tight font-black italic">
+                        {step === 'mode' && <>How do you want to <span className="text-accent">start?</span></>}
                         {step === 'rooms' && <>Which rooms shall we <span className="text-accent">design today?</span></>}
                         {step === 'style' && <>One <span className="text-accent">style</span>, every room.</>}
                         {step === 'design' && currentRoom && (
@@ -282,18 +449,33 @@ const DesignJourney = () => {
                                 </span>
                             </>
                         )}
+                        {step === 'plan' && <>Pick your <span className="text-accent">floor plan</span></>}
+                        {step === 'plan-style' && <>One <span className="text-accent">style</span> for your future home.</>}
+                        {step === 'plan-stage' && (
+                            <>Staging your <span className="text-accent">{planProgress.label || 'home'}</span>
+                                <span className="text-base text-muted font-sans not-italic font-normal block mt-2">
+                                    Room {planProgress.current} of {planProgress.total} — no photos needed
+                                </span>
+                            </>
+                        )}
                     </h1>
                 </div>
 
-                {/* Stepper */}
+                {/* Stepper — different rail for photo vs floor-plan flow. Hidden on mode select. */}
+                {step !== 'mode' && (
                 <div className="flex items-center gap-3 mb-8 text-xs">
-                    {[
+                    {(step === 'plan' || step === 'plan-style' || step === 'plan-stage' ? [
+                        { id: 'plan',       label: 'Pick plan' },
+                        { id: 'plan-style', label: 'Pick style' },
+                        { id: 'plan-stage', label: 'Stage rooms' },
+                    ] : [
                         { id: 'rooms',  label: 'Pick rooms' },
                         { id: 'style',  label: 'Pick style' },
                         { id: 'design', label: 'Stage each room' },
-                    ].map((s, i) => {
+                    ]).map((s, i, arr) => {
                         const active = step === s.id;
-                        const done = ['rooms', 'style', 'design'].indexOf(step) > i;
+                        const order = arr.map((x) => x.id);
+                        const done = order.indexOf(step) > i;
                         return (
                             <div key={s.id} className="inline-flex items-center gap-2">
                                 <span
@@ -357,15 +539,15 @@ const DesignJourney = () => {
                             <button
                                 onClick={handleStartDesign}
                                 style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg font-semibold px-6 py-3 text-sm hover:opacity-90"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg font-semibold px-6 py-3 text-sm hover:opacity-90"
                             >
                                 Continue · upload my own photos
                                 <ArrowRight size={15} />
                             </button>
-                            <span className="text-xs text-muted">or</span>
+                            <span className="text-xs text-muted text-center sm:text-left">or</span>
                             <button
                                 onClick={handleTakeDemoTour}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-accent text-accent font-semibold px-6 py-3 text-sm hover:bg-accent/5"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-accent text-accent font-semibold px-6 py-3 text-sm hover:bg-accent/5"
                             >
                                 Take the 1-click demo tour
                             </button>

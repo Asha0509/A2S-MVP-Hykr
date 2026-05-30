@@ -7,8 +7,8 @@ import {
 
 const Stat = ({ value, label, sub }) => (
     <div>
-        <p className="font-serif text-4xl sm:text-5xl font-black text-main leading-none">{value}</p>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent mt-2">{label}</p>
+        <p className="font-serif text-3xl sm:text-5xl font-black text-main leading-none">{value}</p>
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent mt-2">{label}</p>
         {sub && <p className="text-xs text-muted mt-1">{sub}</p>}
     </div>
 );
@@ -141,46 +141,46 @@ const Home = () => {
                     <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[80px]" />
                 </div>
 
-                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-16">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-[0.3em] uppercase mb-6">
+                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-12 sm:pb-16">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase mb-5 sm:mb-6">
                         AI infrastructure · For Indian builders
                     </div>
 
-                    <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-black text-main leading-[1.05] italic max-w-4xl">
+                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-7xl font-black text-main leading-[1.05] italic max-w-4xl">
                         Every flat you sell <br className="hidden sm:block" />
                         ships with an <span className="text-accent">AI interior designer</span>.
                     </h1>
 
-                    <p className="mt-6 text-base sm:text-lg text-muted max-w-2xl leading-relaxed">
+                    <p className="mt-5 sm:mt-6 text-sm sm:text-lg text-muted max-w-2xl leading-relaxed">
                         Builders embed A2S on their project landing page. Their buyers design every room of their future home —
                         AI-staged, Vastu-scored, with a complete shopping list from the brands the builder already has deals with.
                         A2S handles the experience. The builder earns the commission.
                     </p>
 
-                    <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <div className="mt-7 sm:mt-8 flex flex-col sm:flex-row gap-3">
                         <Link
                             to="/builder"
                             style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold hover:opacity-90"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold hover:opacity-90"
                         >
                             <Building2 size={16} /> Builder workspace
                             <ArrowRight size={15} />
                         </Link>
                         <Link
                             to="/embed-demo"
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-accent px-6 py-3.5 text-sm font-semibold text-accent hover:bg-accent/5"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-accent px-6 py-3.5 text-sm font-semibold text-accent hover:bg-accent/5"
                         >
                             <Eye size={16} /> See it embedded
                         </Link>
                         <Link
                             to="/design"
-                            className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold text-muted hover:text-main"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold text-muted hover:text-main"
                         >
                             <Layers size={16} /> Try the buyer journey
                         </Link>
                     </div>
 
-                    <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-8">
+                    <div className="mt-10 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
                         <Stat value="9"      label="Vendor brands" sub="IKEA · HomeLane · Pepperfry +6" />
                         <Stat value="6"      label="Design styles" sub="Modern → Ethnic" />
                         <Stat value="4"      label="Rooms in flow" sub="Living · Bedroom · Kitchen · Pooja" />
@@ -191,13 +191,13 @@ const Home = () => {
 
             {/* Visible product proof — the buyer flow narrated as 3 frames */}
             <section className="border-y border-premium" style={{ background: 'linear-gradient(180deg, var(--bg-main) 0%, var(--base-parchment) 100%)' }}>
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                    <p className="text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">The buyer journey, narrated</p>
-                    <h2 className="font-serif text-3xl sm:text-4xl text-main font-black italic max-w-3xl leading-tight">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] text-accent mb-3">The buyer journey, narrated</p>
+                    <h2 className="font-serif text-2xl sm:text-4xl text-main font-black italic max-w-3xl leading-tight">
                         From empty unit to designed home — in five minutes.
                     </h2>
 
-                    <div className="grid lg:grid-cols-3 gap-4 mt-10">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8 sm:mt-10">
                         <FrameCard
                             stepLabel="01 · Buyer uploads"
                             title="Their actual room photo"
@@ -218,7 +218,7 @@ const Home = () => {
                         />
                     </div>
 
-                    <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-2xl bg-surface border border-premium p-5">
+                    <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-2xl bg-surface border border-premium p-5">
                         <div className="flex-1">
                             <p className="font-semibold text-main">Then a summary screen rolls it all up.</p>
                             <p className="text-sm text-muted mt-1">
@@ -229,7 +229,7 @@ const Home = () => {
                         <Link
                             to="/design"
                             style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                            className="inline-flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold hover:opacity-90 shrink-0"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold hover:opacity-90 shrink-0"
                         >
                             Try the buyer journey <ArrowRight size={15} />
                         </Link>
@@ -239,14 +239,14 @@ const Home = () => {
 
             {/* The pitch */}
             <section className="bg-surface border-y border-premium">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                    <p className="text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">What no builder's 3D agency does</p>
-                    <h2 className="font-serif text-3xl sm:text-4xl text-main font-black italic max-w-3xl leading-tight">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] text-accent mb-3">What no builder's 3D agency does</p>
+                    <h2 className="font-serif text-2xl sm:text-4xl text-main font-black italic max-w-3xl leading-tight">
                         Builders model <span className="text-accent">one demo flat</span>.
                         A2S models <span className="text-accent">every buyer's home</span> — to their style, their Vastu, their budget.
                     </h2>
 
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 sm:mt-10">
                         <Pillar
                             icon={Wand2}
                             title="Per-buyer AI staging"
@@ -272,13 +272,13 @@ const Home = () => {
             </section>
 
             {/* How it works */}
-            <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <p className="text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">How A2S fits in</p>
-                <h2 className="font-serif text-3xl sm:text-4xl text-main font-black italic max-w-3xl leading-tight">
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] text-accent mb-3">How A2S fits in</p>
+                <h2 className="font-serif text-2xl sm:text-4xl text-main font-black italic max-w-3xl leading-tight">
                     Three steps. Zero infrastructure on the builder's side.
                 </h2>
 
-                <div className="grid lg:grid-cols-3 gap-4 mt-10">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8 sm:mt-10">
                     {[
                         {
                             n: '01',
@@ -316,9 +316,9 @@ const Home = () => {
 
             {/* Closing CTA strip */}
             <section className="bg-surface border-t border-premium">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
-                        <h3 className="font-serif text-2xl sm:text-3xl text-main font-black italic leading-tight">
+                        <h3 className="font-serif text-xl sm:text-3xl text-main font-black italic leading-tight">
                             One embed. <span className="text-accent">Every buyer designs their own home.</span>
                         </h3>
                         <p className="text-sm text-muted mt-2 max-w-2xl">
@@ -328,7 +328,7 @@ const Home = () => {
                     <Link
                         to="/builder"
                         style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold hover:opacity-90 shrink-0"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold hover:opacity-90 shrink-0"
                     >
                         Start a builder workspace <ArrowRight size={15} />
                     </Link>

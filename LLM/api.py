@@ -29,8 +29,16 @@ from agent.core import process_message, process_vastu
 from vastu_score import analyse_vastu_score
 from data.loader import load_product_catalog
 from utils.formatters import format_product_summary
-from staging import stage_room, StagingError
+from staging import (
+    stage_room,
+    StagingError,
+    _resolve_flux_prompt,
+    FAL_API_KEY,
+    DEFAULT_STYLE,
+)
 from vastu_overlay import generate_vastu_overlay, OverlayError
+import base64 as _base64
+import requests as _requests
 
 # Load catalog lazily to prevent startup timeouts
 _catalog = None
@@ -222,6 +230,94 @@ def vastu_overlay():
     except Exception as exc:
         print(f"[OVERLAY] Unexpected: {exc}")
         return jsonify({"error": "Internal overlay failure"}), 500
+
+
+@app.route('/api/stage/from-prompt', methods=['POST'])
+def stage_from_prompt():
+    """
+    Text-to-image staging for pre-possession buyers (no source photo).
+
+    The buyer has only a floor plan, not a unit photo. We synthesise a room
+    from the style + room-type prompt using fal.ai FLUX.1-dev text-to-image,
+    and return the same response shape as /api/stage so the journey UI can
+    treat both paths identically.
+
+    JSON body:
+        style    (str)  — modern | minimal | contemporary | classic | ethnic | functional
+        roomType (str)  — living_room | bedroom | kitchen | pooja_room | dining_room | ...
+        hint     (str)  — optional free-text buyer brief (≤300 chars)
+    """
+    data = request.get_json(silent=True) or {}
+    style = (data.get('style') or DEFAULT_STYLE).lower().strip()
+    room_type = (data.get('roomType') or data.get('room_type') or '').lower().strip()
+    hint = data.get('hint') or data.get('notes')
+
+    if not FAL_API_KEY:
+        return jsonify({"error": "Text-to-image staging requires FAL_API_KEY"}), 500
+
+    prompt = _resolve_flux_prompt(style, room_type, hint, vision_description=None)
+    print(f"[STAGE-T2I] style={style!r} room={room_type!r} prompt_len={len(prompt)}")
+
+    fal_model = "fal-ai/flux/dev"
+    payload = {
+        "prompt": prompt,
+        "image_size": "landscape_4_3",
+        "num_inference_steps": 28,
+        "guidance_scale": 3.5,
+        "num_images": 1,
+        "enable_safety_checker": False,
+    }
+    headers = {
+        "Authorization": f"Key {FAL_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = _requests.post(
+            f"https://fal.run/{fal_model}",
+            headers=headers,
+            json=payload,
+            timeout=180,
+        )
+    except _requests.RequestException as exc:
+        print(f"[STAGE-T2I] network error: {exc}")
+        return jsonify({"error": f"fal.ai network error: {exc}"}), 502
+
+    if resp.status_code != 200:
+        print(f"[STAGE-T2I] fal.ai non-200: {resp.status_code} — {resp.text[:300]}")
+        return jsonify({"error": f"fal.ai returned HTTP {resp.status_code}"}), 502
+
+    try:
+        body = resp.json() or {}
+    except ValueError:
+        return jsonify({"error": "fal.ai returned non-JSON body"}), 502
+
+    images = body.get("images") or []
+    if not images or not images[0].get("url"):
+        return jsonify({"error": "fal.ai returned no image"}), 502
+
+    img_url = images[0]["url"]
+    try:
+        img_resp = _requests.get(img_url, timeout=60)
+        if img_resp.status_code != 200:
+            return jsonify({"error": "Failed to fetch generated image"}), 502
+        raw_bytes = img_resp.content
+    except _requests.RequestException as exc:
+        return jsonify({"error": f"Image fetch failed: {exc}"}), 502
+
+    image_b64 = _base64.b64encode(raw_bytes).decode("ascii")
+    result = {
+        "image_base64": image_b64,
+        "image_mime": "image/jpeg",
+        "style": style,
+        "room_type": room_type,
+        "model": fal_model,
+        "pipeline": "fal-flux-dev-t2i",
+        "prompt": prompt,
+        "vision_description": None,
+        "caption": None,
+        "cached": False,
+    }
+    return jsonify(result), 200
 
 
 if __name__ == '__main__':
