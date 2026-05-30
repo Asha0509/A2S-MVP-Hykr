@@ -49,4 +49,9 @@ public class CachedProductsService {
         if (!isLoaded) loadCache();
         return cachedProducts.size();
     }
+
+    public List<ProductListItem> getAllCached() {
+        if (!isLoaded) loadCache();
+        return cachedProducts;
+    }
 }

@@ -60,6 +60,112 @@ public class ProductController {
         return productRepository.findByCategory(category);
     }
 
+    /**
+     * Sample bundle endpoint for the "Build Your Home" buyer flow.
+     * Returns a small, deterministic, room-appropriate product bundle picked
+     * from the in-memory cache so the buyer journey can render instantly
+     * without paginating the full catalog.
+     */
+    @GetMapping("/sample-bundle")
+    public ResponseEntity<Map<String, Object>> getSampleBundle(
+            @RequestParam String roomType,
+            @RequestParam(defaultValue = "modern") String style,
+            @RequestParam(required = false) String brands,
+            @RequestParam(defaultValue = "6") int limit) {
+        if (limit < 1) limit = 1;
+        if (limit > 12) limit = 12;
+        final int cap = limit;
+        final String roomKey = roomType == null ? "" : roomType.trim().toLowerCase(Locale.ROOT);
+        final String styleKey = style == null ? "" : style.trim().toLowerCase(Locale.ROOT);
+
+        // Map the canonical room key to alternate category/productType tokens
+        // so e.g. "bedroom" also catches products whose category is "bed".
+        Set<String> roomAliases = roomAliases(roomKey);
+
+        Set<String> brandFilter = (brands == null || brands.isBlank())
+                ? Set.of()
+                : java.util.Arrays.stream(brands.split(","))
+                    .map(s -> s.trim().toLowerCase(Locale.ROOT))
+                    .filter(s -> !s.isBlank())
+                    .collect(Collectors.toSet());
+
+        List<ProductListItem> pool = cachedProductsService.getAllCached().stream()
+                .filter(p -> p.price() != null && p.price() > 0)
+                .filter(p -> matchesRoom(p, roomKey, roomAliases))
+                .filter(p -> styleKey.isBlank()
+                        || (p.aestheticStyle() != null
+                            && p.aestheticStyle().toLowerCase(Locale.ROOT).contains(styleKey)))
+                .filter(p -> brandFilter.isEmpty()
+                        || (p.brand() != null
+                            && brandFilter.contains(p.brand().trim().toLowerCase(Locale.ROOT))))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // Deterministic shuffle so the same (roomType, style) always returns
+        // the same order — important for stable UX and cacheable responses.
+        long seed = (roomKey + "|" + styleKey).hashCode();
+        java.util.Collections.shuffle(pool, new java.util.Random(seed));
+
+        List<Map<String, Object>> items = pool.stream()
+                .limit(cap)
+                .map(p -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", p.id());
+                    item.put("productName", p.name());
+                    item.put("brand", p.brand());
+                    item.put("priceValue", p.price());
+                    item.put("priceCurrency", "INR");
+                    item.put("imageUrl", p.image());
+                    item.put("productType", p.category());
+                    item.put("roomType", p.roomType());
+                    item.put("style", p.aestheticStyle());
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        double totalEstimate = items.stream()
+                .map(it -> (Double) it.get("priceValue"))
+                .filter(Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("roomType", roomKey);
+        response.put("style", styleKey);
+        response.put("items", items);
+        response.put("totalEstimate", totalEstimate);
+        response.put("currency", "INR");
+
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS))
+            .body(response);
+    }
+
+    private Set<String> roomAliases(String roomKey) {
+        switch (roomKey) {
+            case "living_room": return Set.of("living room", "living", "drawing room", "sofa", "couch", "tv unit", "coffee table");
+            case "bedroom":     return Set.of("bedroom", "bed", "wardrobe", "dresser", "nightstand", "mattress");
+            case "kitchen":     return Set.of("kitchen", "dining", "cookware", "appliance", "modular kitchen");
+            case "pooja_room":  return Set.of("pooja room", "pooja", "puja", "mandir", "temple");
+            default:            return Set.of(roomKey);
+        }
+    }
+
+    private boolean matchesRoom(ProductListItem p, String roomKey, Set<String> aliases) {
+        String room = p.roomType() == null ? "" : p.roomType().toLowerCase(Locale.ROOT);
+        String cat  = p.category() == null ? "" : p.category().toLowerCase(Locale.ROOT);
+        // Direct hit on the canonical key (e.g. "bedroom"), then alias scan
+        // against both roomType and category (which acts as productType here).
+        if (!roomKey.isBlank() && (room.contains(roomKey) || cat.contains(roomKey))) {
+            return true;
+        }
+        for (String alias : aliases) {
+            if (room.contains(alias) || cat.contains(alias)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @GetMapping("/{id}/insights")
     public ResponseEntity<ProductInsightsResponse> getProductInsights(@PathVariable String id) {
         Optional<Product> optionalProduct = productRepository.findById(id);
