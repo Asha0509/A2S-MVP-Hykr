@@ -84,6 +84,16 @@ const OAuthTokenBootstrap = () => {
 import AIStylistWidget from './components/AIStylistWidget';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// The floating AI consultant chatbot is a consumer-flow feature; hide it on
+// the HyKr B2B surfaces (landing, builder portal, embed demo, buyer journey)
+// so the demo doesn't look like a 2018 marketplace chat bot.
+const HIDE_STYLIST_ON = new Set(['/', '/login', '/builder', '/embed-demo', '/design', '/design/summary']);
+const ConditionalStylistWidget = () => {
+    const { pathname } = useLocation();
+    if (HIDE_STYLIST_ON.has(pathname)) return null;
+    return <AIStylistWidget />;
+};
+
 // Branded loading fallback for Suspense
 const PageLoader = () => (
     <div className="min-h-screen bg-main flex flex-col items-center justify-center gap-6 transition-all duration-500">
@@ -117,11 +127,11 @@ const App = () => {
                                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                                 <Route path="/vastu-score" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
                                 <Route path="/vinsight" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
-                                <Route path="/stage" element={<ProtectedRoute><StageRoom /></ProtectedRoute>} />
+                                <Route path="/stage" element={<StageRoom />} />
                                 <Route path="/builder" element={<BuilderPortal />} />
                                 <Route path="/embed-demo" element={<EmbedDemo />} />
-                                <Route path="/design" element={<DesignJourney />} />
                                 <Route path="/design/summary" element={<DesignSummary />} />
+                                <Route path="/design" element={<DesignJourney />} />
                                 <Route path="/3d-space" element={<ProtectedRoute><ThreeDSpace /></ProtectedRoute>} />
                                 <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -132,7 +142,7 @@ const App = () => {
                         </Suspense>
                     </main>
                     <Footer />
-                    <AIStylistWidget />
+                    <ConditionalStylistWidget />
                 </div>
             </Router>
         </ErrorBoundary>

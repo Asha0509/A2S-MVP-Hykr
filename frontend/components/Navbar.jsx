@@ -1,20 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Heart, User, Search, Box, X, LogOut, Palette, ChevronDown, PlayCircle, Sparkles, Lock, Wand2, Building2, Layers } from 'lucide-react';
+import { Menu, Heart, User, Search, X, LogOut, ChevronDown, Lock, Building2, Layers, Eye } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import TutorialGuide from './TutorialGuide';
 import ConfirmationModal from './ConfirmationModal';
 import { useNavigate } from 'react-router-dom';
 
 const NAV_LINKS = [
-    { to: '/', label: 'Home', authRequired: true },
-    { to: '/gallery', label: 'Gallery' },
-    { to: '/design', label: 'Build My Home', icon: Layers },
-    { to: '/stage', label: 'AI Staging', icon: Wand2 },
-    { to: '/vastu-score', label: 'Vastu Score', icon: Sparkles },
-    { to: '/3d-space', label: '3D Space', icon: Box },
+    { to: '/', label: 'Home' },
     { to: '/builder', label: 'For Builders', icon: Building2 },
-    { to: '/dashboard', label: 'Dashboard', authRequired: true },
+    { to: '/design', label: 'Build My Home', icon: Layers },
+    { to: '/embed-demo', label: 'Embed Demo', icon: Eye },
 ];
 
 const Navbar = () => {
