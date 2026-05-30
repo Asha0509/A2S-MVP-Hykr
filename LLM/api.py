@@ -29,6 +29,7 @@ from agent.core import process_message, process_vastu
 from vastu_score import analyse_vastu_score
 from data.loader import load_product_catalog
 from utils.formatters import format_product_summary
+from staging import stage_room, StagingError
 
 # Load catalog lazily to prevent startup timeouts
 _catalog = None
@@ -132,6 +133,52 @@ def vastu_score_analyse():
     except Exception as e:
         print(f"[VASTU_SCORE] Error: {e}")
         return jsonify({"message": "Taking a bit longer than usual. Please try again."}), 503
+
+@app.route('/api/stage', methods=['POST'])
+def stage():
+    """
+    AI room staging via Gemini 2.5 Flash Image.
+
+    Multipart form:
+        image      (file)   — required, the room photo (jpg/png/webp)
+        style      (text)   — optional: modern | minimal | contemporary | classic | ethnic | functional
+        roomType   (text)   — optional: bedroom, living_room, dining_room, etc.
+        hint       (text)   — optional: free-text buyer notes (≤400 chars)
+    """
+    image_file = request.files.get('image')
+    if not image_file:
+        return jsonify({"error": "image file is required"}), 400
+
+    image_bytes = image_file.read()
+    if not image_bytes:
+        return jsonify({"error": "uploaded image is empty"}), 400
+    if len(image_bytes) > 12 * 1024 * 1024:  # 12 MB safety cap
+        return jsonify({"error": "image is too large (max 12 MB)"}), 413
+
+    mime_type = image_file.content_type or "image/jpeg"
+    style = request.form.get('style')
+    room_type = request.form.get('roomType') or request.form.get('room_type')
+    hint = request.form.get('hint') or request.form.get('notes')
+
+    print(f"[STAGE] {image_file.filename} ({len(image_bytes)} bytes, {mime_type}) "
+          f"style={style!r} room={room_type!r}")
+
+    try:
+        result = stage_room(
+            image_bytes=image_bytes,
+            mime_type=mime_type,
+            style=style,
+            room_type=room_type,
+            hint=hint,
+        )
+        return jsonify(result), 200
+    except StagingError as exc:
+        print(f"[STAGE] StagingError: {exc}")
+        return jsonify({"error": str(exc)}), 502
+    except Exception as exc:
+        print(f"[STAGE] Unexpected: {exc}")
+        return jsonify({"error": "Internal staging failure"}), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

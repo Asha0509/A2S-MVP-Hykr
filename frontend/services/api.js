@@ -279,6 +279,27 @@ export const trackVastuCatalogClick = async (payload) => {
         return { success: false, message: error.response?.data?.message || 'click tracking failed' };
     }
 };
+
+// ============================================
+// AI ROOM STAGING (Gemini 2.5 Flash Image)
+// ============================================
+export const stageRoom = async ({ image, style, roomType, hint }) => {
+    const formData = new FormData();
+    formData.append('image', image);
+    if (style) formData.append('style', style);
+    if (roomType) formData.append('roomType', roomType);
+    if (hint) formData.append('hint', hint);
+
+    try {
+        const response = await api.post('/stage', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 180000,
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: 'AI room staging failed. Please try again.' };
+    }
+};
 // ============================================
 // WAITLIST
 // ============================================
