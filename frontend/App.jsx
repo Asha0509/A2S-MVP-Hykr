@@ -19,6 +19,7 @@ const BuilderPortal = lazy(() => import('./pages/BuilderPortal'));
 const EmbedDemo = lazy(() => import('./pages/EmbedDemo'));
 const DesignJourney = lazy(() => import('./pages/DesignJourney'));
 const DesignSummary = lazy(() => import('./pages/DesignSummary'));
+const VastuHUDPage = lazy(() => import('./pages/VastuHUDPage'));
 const Waitlist = lazy(() => import('./pages/Waitlist'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
@@ -132,6 +133,7 @@ const App = () => {
                                 <Route path="/embed-demo" element={<EmbedDemo />} />
                                 <Route path="/design/summary" element={<DesignSummary />} />
                                 <Route path="/design" element={<DesignJourney />} />
+                                <Route path="/vastu-hud" element={<VastuHUDPage />} />
                                 <Route path="/3d-space" element={<ProtectedRoute><ThreeDSpace /></ProtectedRoute>} />
                                 <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

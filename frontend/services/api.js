@@ -296,6 +296,25 @@ export const getSampleBundle = async ({ roomType, style, brands, limit = 6 }) =>
 };
 
 // ============================================
+// VASTU HUD OVERLAY (LLaVA + OpenRouter reasoning)
+// ============================================
+export const analyseVastuOverlay = async ({ image, roomType, facing }) => {
+    const formData = new FormData();
+    formData.append('image', image);
+    if (roomType) formData.append('roomType', roomType);
+    if (facing) formData.append('facing', facing);
+    try {
+        const response = await api.post('/vastu/overlay', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000,
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: 'Vastu HUD analysis failed' };
+    }
+};
+
+// ============================================
 // AI ROOM STAGING (Cloudflare Workers AI)
 // ============================================
 export const stageRoom = async ({ image, style, roomType, hint }) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Heart, User, Search, X, LogOut, ChevronDown, Lock, Building2, Layers, Eye } from 'lucide-react';
+import { Menu, Heart, User, Search, X, LogOut, ChevronDown, Lock, Building2, Layers, Eye, Compass } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import TutorialGuide from './TutorialGuide';
 import ConfirmationModal from './ConfirmationModal';
@@ -10,6 +10,7 @@ const NAV_LINKS = [
     { to: '/', label: 'Home' },
     { to: '/builder', label: 'For Builders', icon: Building2 },
     { to: '/design', label: 'Build My Home', icon: Layers },
+    { to: '/vastu-hud', label: 'Vastu HUD', icon: Compass },
     { to: '/embed-demo', label: 'Embed Demo', icon: Eye },
 ];
 

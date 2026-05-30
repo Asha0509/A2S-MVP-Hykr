@@ -1,18 +1,18 @@
 """
-AI room staging via Cloudflare Workers AI (SD 1.5 img2img).
+AI room staging via Cloudflare Workers AI — 2-stage pipeline.
 
-Takes an empty/cluttered room photo + a style prompt and returns a fully
-furnished render in the chosen style. This is the "wow" feature of the
-HyKr MVP: buyer uploads photo → gets a magazine-quality staged room back.
+Stage 1 — Vision: LLaVA 1.5 7B describes the user's uploaded room photo
+in detail (walls, floor, windows, lighting, layout). This gives FLUX
+strong textual conditioning even though we can't pass the image directly.
 
-Why Cloudflare Workers AI:
-  - Truly free (10,000 neurons/day on the free Cloudflare plan, no card)
-  - SD 1.5 img2img preserves room composition when `strength` is 0.55–0.7
-  - Latency 3–8 sec, well within the demo window
+Stage 2 — Generation: FLUX.1-schnell (Black Forest Labs, 4-step distilled
+SOTA model) generates a photoreal magazine-cover render guided by the
+vision description + the chosen style prompt. Quality is *dramatically*
+better than SD 1.5 — comparable to Midjourney v6 / DALL-E 3 — and still
+free on Cloudflare Workers AI's 10k neurons/day plan.
 
-We resize the input photo to a multiple-of-8 size (max 768) before sending
-because SD 1.5 strictly needs that, and a smaller image keeps the JSON
-payload and inference time small.
+If the vision pass or FLUX call fails, we fall back to SD 1.5 img2img
+on the original photo (the previous pipeline), so the demo never dies.
 """
 
 from __future__ import annotations
@@ -35,78 +35,113 @@ _logger = logging.getLogger(__name__)
 
 CF_ACCOUNT_ID = get_secret("CF_ACCOUNT_ID")
 CF_API_TOKEN = get_secret("CF_API_TOKEN")
-CF_IMG2IMG_MODEL = os.environ.get("CF_IMG2IMG_MODEL", "@cf/runwayml/stable-diffusion-v1-5-img2img")
 CF_BASE_URL = "https://api.cloudflare.com/client/v4/accounts"
 
-# img2img generation knobs. Strength 0.65 keeps room geometry recognisable
-# while replacing furniture/decor; 20 steps balances speed and quality.
+# Models in the 2-stage pipeline.
+CF_VISION_MODEL = os.environ.get("CF_VISION_MODEL", "@cf/llava-hf/llava-1.5-7b-hf")
+CF_FLUX_MODEL = os.environ.get("CF_FLUX_MODEL", "@cf/black-forest-labs/flux-1-schnell")
+
+# Legacy SD 1.5 fallback path. Used when the FLUX/vision pipeline errors out.
+CF_SD15_MODEL = os.environ.get("CF_IMG2IMG_MODEL", "@cf/runwayml/stable-diffusion-v1-5-img2img")
 STAGING_STRENGTH = float(os.environ.get("STAGING_STRENGTH", "0.65"))
 STAGING_NUM_STEPS = int(os.environ.get("STAGING_NUM_STEPS", "20"))
 STAGING_GUIDANCE = float(os.environ.get("STAGING_GUIDANCE", "7.5"))
+
 STAGING_MAX_SIDE = int(os.environ.get("STAGING_MAX_SIDE", "768"))
+FLUX_STEPS = int(os.environ.get("FLUX_STEPS", "4"))  # schnell is distilled — 4 is sweet spot
 
 # ──────────────────────────────────────────────
-# Style → SD 1.5 prompt. Tuned for SD-style descriptive prompts (comma-
-# separated phrases, emphasis on lighting/material keywords) rather than
-# the conversational prompts Gemini liked.
+# Style → FLUX-friendly prompts. FLUX responds best to detailed, natural-
+# language prompts (more conversational than SD-style comma lists).
+# Each prompt now explicitly demands magazine-grade lighting + composition.
 # ──────────────────────────────────────────────
 STYLE_PROMPTS = {
     "modern": (
-        "modern Indian apartment, low-profile teak sofa, neutral linen upholstery, "
-        "statement pendant light, indoor plant, warm afternoon daylight, "
-        "wood floor, clean walls, photorealistic interior photography, 4k"
+        "A photorealistic editorial shot of a modern Indian urban apartment interior. "
+        "Low-slung teak sofa with cream linen cushions, a brass arc floor lamp, "
+        "a single statement pendant light over a polished concrete coffee table, "
+        "warm afternoon sunlight raking across the wood floor, a sculptural indoor "
+        "fiddle-leaf fig in a terracotta pot, art-magazine composition, sharp focus, "
+        "shot on Hasselblad medium format, soft shadows."
     ),
     "minimal": (
-        "Japandi minimal interior, light oak floor, off-white walls, low-slung "
-        "linen sofa or platform bed, single indoor plant, soft diffused daylight, "
-        "almost no clutter, calm composition, photorealistic, 4k"
+        "A serene Japandi-minimal interior in muted tones: pale oak floor, off-white "
+        "walls, a single low-slung linen sofa or platform bed in cream, one ceramic "
+        "vase with a single dried branch, soft diffused morning light through paper "
+        "screens, intentionally empty negative space, magazine-cover composition, "
+        "shot on 35mm film, cinematic depth of field."
     ),
     "contemporary": (
-        "contemporary Indian interior, warm beige and terracotta tones, curved-back "
-        "upholstered sofa, brass floor lamp, layered rug, large abstract wall art, "
-        "warm ambient lighting, photorealistic interior photography, 4k"
+        "A warm contemporary Indian living room interior. Curved-back upholstered "
+        "sofa in terracotta velvet, layered jute and wool rugs, a brass tripod floor "
+        "lamp, large abstract canvas in earth tones on the back wall, indoor monstera "
+        "in a stoneware planter, golden-hour ambient lighting, art-direction by Kelly "
+        "Wearstler, photographed for Architectural Digest."
     ),
     "classic": (
-        "classic Indian interior, dark carved teak furniture, jewel-tone upholstery, "
-        "chandelier, ornate persian rug, traditional brass accents, warm golden hour "
-        "lighting, photorealistic, 4k"
+        "An opulent classic Indian living room: dark carved rosewood furniture with "
+        "hand-turned spindles, deep emerald and burnt-orange velvet upholstery, a "
+        "crystal chandelier, ornate Persian rug, traditional brass urli with floating "
+        "marigolds, warm golden tungsten lighting, photographed for House & Garden."
     ),
     "ethnic": (
-        "vibrant Indian ethnic interior, handcrafted wooden furniture, block-print "
-        "textiles, brass diya lamps, jharokha wall art, terracotta plant pots, "
-        "warm earthy lighting, photorealistic, 4k"
+        "A vibrant Indian ethnic interior: handcrafted carved teak furniture, indigo "
+        "and madder-red Jaipur block-print textiles, brass diya lamps casting warm "
+        "pools of light, a carved wooden jharokha as wall art, terracotta plant pots "
+        "with money plants, woven jute rug, festival-evening ambient lighting, "
+        "photographed for Elle Decor India."
     ),
     "functional": (
-        "functional Scandinavian interior, light wood modular storage, clean-lined "
-        "sofa or platform bed, neutral textiles, single accent colour, bright "
-        "diffused daylight, photorealistic, 4k"
+        "A Scandinavian-functional Indian apartment interior: pale ash modular shelving "
+        "system, a clean-lined boucle sofa in oatmeal, a small herringbone-jute rug, "
+        "a single accent in mustard yellow, oversized window flooding the room with "
+        "soft diffused daylight, intentional minimalism, photographed for Apartamento."
     ),
 }
 
-# SD's `negative_prompt` keeps the model from regressing into common failure modes.
-NEGATIVE_PROMPT = (
-    "blurry, low quality, deformed, distorted geometry, wrong perspective, "
-    "ugly, cartoon, watermark, text, signature, frame, extra walls, missing walls"
+# Room-specific augmentations layered on top of style prompts.
+ROOM_OVERLAY = {
+    "living_room":   "Wide-angle three-quarter view of a 14x16 ft living room with a feature wall, sofa-facing arrangement.",
+    "bedroom":       "Master bedroom with a queen platform bed against the longest wall, a single bedside lamp, art above the headboard.",
+    "kitchen":       "Compact Indian modular kitchen with breakfast counter, under-cabinet lighting, brass tap fixtures, copper utensil display.",
+    "pooja_room":    "Intimate small pooja room with a carved marble or rosewood mandir, oil lamps, fresh marigold garland, soft golden light, sacred atmosphere.",
+    "dining_room":   "Dining room with a 6-seater wooden table, statement pendant above the table, sideboard with brass accents.",
+    "study":         "Compact home study with a wooden writing desk facing a window, ergonomic chair, floor-to-ceiling bookshelf.",
+    "balcony":       "Indian-apartment balcony with low rattan seating, hanging planters, jute textiles, fairy lights.",
+    "drawing_room":  "Formal Indian drawing room with a 3-seater plus accent chairs in conversation arrangement, statement coffee table, decorative tray.",
+}
+
+# Magazine-grade quality boosters appended to every FLUX prompt.
+QUALITY_BOOSTER = (
+    " Photoreal, magazine cover quality, professional interior design photography, "
+    "ultra-detailed textures, balanced composition, depth, no distortion, "
+    "8K, sharp focus, lifelike materials."
+)
+
+NEGATIVE_PROMPT_KEYWORDS = (
+    "blurry, low quality, deformed perspective, warped geometry, plastic textures, "
+    "amateur photo, watermark, text overlay, cartoon, anime, oversaturated, "
+    "extra walls, missing walls, floating furniture, asymmetric humans, wrong scale"
 )
 
 DEFAULT_STYLE = "modern"
 MAX_PROMPT_HINT_LEN = 300
 
 # ──────────────────────────────────────────────
-# LRU cache so re-recording the demo with the same photo + style doesn't
-# burn neurons on every take.
+# LRU cache (re-recording the demo doesn't burn neurons).
 # ──────────────────────────────────────────────
 _CACHE_MAX = 50
 _cache: "OrderedDict[str, dict]" = OrderedDict()
 _cache_lock = threading.Lock()
 
 
-def _cache_key(image_bytes: bytes, style: str, room_type: str, hint: str) -> str:
+def _cache_key(image_bytes: bytes, style: str, room_type: str, hint: str, model: str) -> str:
     h = hashlib.sha256()
     h.update(image_bytes)
     h.update(b"|"); h.update((style or "").encode("utf-8"))
     h.update(b"|"); h.update((room_type or "").encode("utf-8"))
     h.update(b"|"); h.update((hint or "").encode("utf-8"))
+    h.update(b"|"); h.update((model or "").encode("utf-8"))
     return h.hexdigest()
 
 
@@ -127,89 +162,129 @@ def _cache_put(key: str, value: dict) -> None:
 
 
 class StagingError(Exception):
-    """Raised when the staging API fails or returns unusable output."""
-
     def __init__(self, message: str, *, status: int = 502, retry_after: Optional[int] = None):
         super().__init__(message)
         self.status = status
         self.retry_after = retry_after
 
 
-def _resolve_prompt(style: Optional[str], room_type: Optional[str], hint: Optional[str]) -> str:
-    base = STYLE_PROMPTS.get((style or "").lower().strip(), STYLE_PROMPTS[DEFAULT_STYLE])
-    room = (room_type or "").strip().lower().replace("_", " ")
-    parts = [base]
-    if room:
-        parts.append(f"interior of a {room}")
-    if hint:
-        clean_hint = hint.strip()[:MAX_PROMPT_HINT_LEN]
-        if clean_hint:
-            parts.append(clean_hint)
-    return ", ".join(parts)
-
-
-def _resize_for_sd(image_bytes: bytes) -> bytes:
-    """Resize so the larger side is ≤ STAGING_MAX_SIDE and both dims are multiples of 8."""
+# ──────────────────────────────────────────────
+# Image preprocessing
+# ──────────────────────────────────────────────
+def _resize_image(image_bytes: bytes, max_side: int = STAGING_MAX_SIDE) -> bytes:
+    """Resize so the larger side ≤ max_side, JPEG-compressed."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
     except Exception as exc:
         raise StagingError(f"Could not read uploaded image: {exc}", status=400) from exc
 
     img = img.convert("RGB")
-    img.thumbnail((STAGING_MAX_SIDE, STAGING_MAX_SIDE), Image.LANCZOS)
+    img.thumbnail((max_side, max_side), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=92)
+    return buf.getvalue()
 
-    # Crop bottom-right to nearest multiple of 8 — SD 1.5 requires this.
+
+def _resize_for_sd15(image_bytes: bytes) -> bytes:
+    """SD 1.5 specifically requires multiples of 8 — used only by the fallback path."""
+    img = Image.open(io.BytesIO(image_bytes))
+    img = img.convert("RGB")
+    img.thumbnail((STAGING_MAX_SIDE, STAGING_MAX_SIDE), Image.LANCZOS)
     w, h = img.size
     w_aligned = max(8, (w // 8) * 8)
     h_aligned = max(8, (h // 8) * 8)
     if (w, h) != (w_aligned, h_aligned):
         img = img.crop((0, 0, w_aligned, h_aligned))
-
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=90)
     return buf.getvalue()
 
 
-def stage_room(
-    image_bytes: bytes,
-    mime_type: str = "image/jpeg",
-    style: Optional[str] = None,
-    room_type: Optional[str] = None,
-    hint: Optional[str] = None,
-) -> dict:
-    """
-    Send a room photo + style prompt to Cloudflare Workers AI's SD 1.5
-    img2img model. Returns the same dict shape the old Gemini implementation
-    used so the API layer / frontend don't need to change.
-    """
+# ──────────────────────────────────────────────
+# Stage 1 — Vision: describe the uploaded room with LLaVA
+# ──────────────────────────────────────────────
+_LLAVA_VISION_PROMPT = (
+    "You are an interior design analyst. In one tight paragraph (max 80 words), "
+    "describe this room photo for a generative image model. Focus on: "
+    "wall colour and material, floor type and tone, window placement and size, "
+    "ceiling height, existing lighting direction, room shape (rectangular/square), "
+    "and any architectural features (mouldings, beams, arches). Do NOT describe "
+    "furniture (we are about to restage it). End with the apparent room aspect ratio."
+)
+
+
+def _describe_room(resized_image_bytes: bytes) -> Optional[str]:
+    """Call Cloudflare LLaVA to get a textual description of the user's room."""
     if not CF_ACCOUNT_ID or not CF_API_TOKEN:
-        raise StagingError(
-            "Cloudflare Workers AI credentials are not configured "
-            "(CF_ACCOUNT_ID + CF_API_TOKEN).",
-            status=500,
+        return None
+    url = f"{CF_BASE_URL}/{CF_ACCOUNT_ID}/ai/run/{CF_VISION_MODEL}"
+    payload = {
+        "prompt": _LLAVA_VISION_PROMPT,
+        "image": list(resized_image_bytes),
+        "max_tokens": 150,
+    }
+    try:
+        resp = requests.post(
+            url,
+            headers={"Authorization": f"Bearer {CF_API_TOKEN}"},
+            json=payload,
+            timeout=60,
         )
-    if not image_bytes:
-        raise StagingError("No image bytes provided", status=400)
+    except requests.RequestException as exc:
+        _logger.warning("LLaVA network error: %s", exc)
+        return None
+    if resp.status_code != 200:
+        _logger.warning("LLaVA non-200: %s — %s", resp.status_code, resp.text[:300])
+        return None
+    try:
+        body = resp.json() or {}
+        description = (body.get("result") or {}).get("description")
+        if isinstance(description, str) and description.strip():
+            return description.strip()
+    except ValueError:
+        pass
+    return None
 
-    prompt = _resolve_prompt(style, room_type, hint)
-    cache_key = _cache_key(image_bytes, style or "", room_type or "", hint or "")
-    cached = _cache_get(cache_key)
-    if cached is not None:
-        _logger.info("Staging cache HIT (%s…)", cache_key[:12])
-        return {**cached, "cached": True}
 
-    resized = _resize_for_sd(image_bytes)
+# ──────────────────────────────────────────────
+# Stage 2 — Generation: FLUX-schnell
+# ──────────────────────────────────────────────
+def _resolve_flux_prompt(
+    style: Optional[str],
+    room_type: Optional[str],
+    hint: Optional[str],
+    vision_description: Optional[str],
+) -> str:
+    parts = []
 
+    base = STYLE_PROMPTS.get((style or "").lower().strip(), STYLE_PROMPTS[DEFAULT_STYLE])
+    parts.append(base)
+
+    room_key = (room_type or "").lower().strip()
+    room_extra = ROOM_OVERLAY.get(room_key)
+    if room_extra:
+        parts.append(room_extra)
+
+    if vision_description:
+        parts.append("The existing space looks like: " + vision_description)
+
+    if hint:
+        clean_hint = hint.strip()[:MAX_PROMPT_HINT_LEN]
+        if clean_hint:
+            parts.append("Additional buyer brief: " + clean_hint + ".")
+
+    parts.append(QUALITY_BOOSTER.strip())
+
+    return " ".join(parts)
+
+
+def _call_flux(prompt: str) -> bytes:
+    """Call Cloudflare FLUX-schnell text-to-image. Returns raw PNG bytes."""
+    url = f"{CF_BASE_URL}/{CF_ACCOUNT_ID}/ai/run/{CF_FLUX_MODEL}"
     payload = {
         "prompt": prompt,
-        "negative_prompt": NEGATIVE_PROMPT,
-        "image": list(resized),  # SD img2img on CF expects an array of uint8
-        "strength": STAGING_STRENGTH,
-        "num_steps": STAGING_NUM_STEPS,
-        "guidance": STAGING_GUIDANCE,
+        "num_steps": FLUX_STEPS,
     }
-    url = f"{CF_BASE_URL}/{CF_ACCOUNT_ID}/ai/run/{CF_IMG2IMG_MODEL}"
-
     try:
         resp = requests.post(
             url,
@@ -218,77 +293,129 @@ def stage_room(
             timeout=120,
         )
     except requests.RequestException as exc:
-        raise StagingError(f"Network error talking to Cloudflare: {exc}") from exc
+        raise StagingError(f"FLUX network error: {exc}") from exc
 
     if resp.status_code != 200:
-        _logger.error("Workers AI non-200: %s — %s", resp.status_code, resp.text[:500])
-
-        # Try to surface CF's error message
-        cf_msg = ""
-        try:
-            body = resp.json() or {}
-            errs = body.get("errors") or []
-            if errs:
-                cf_msg = " ".join(str(e.get("message") or "") for e in errs).strip()
-        except ValueError:
-            cf_msg = resp.text[:200]
-
+        _logger.error("FLUX non-200: %s — %s", resp.status_code, resp.text[:400])
         if resp.status_code == 429:
             raise StagingError(
-                cf_msg or "Cloudflare daily neuron quota reached. Resets at midnight UTC.",
-                status=429,
-                retry_after=60,
+                "Cloudflare daily neuron quota reached. Try again tomorrow or sign up for a paid plan.",
+                status=429, retry_after=300,
             )
-        if resp.status_code in (401, 403):
-            raise StagingError(
-                cf_msg or "Cloudflare rejected the API token. Check CF_API_TOKEN scope.",
-                status=502,
-            )
-        raise StagingError(
-            cf_msg or f"Cloudflare Workers AI returned HTTP {resp.status_code}",
-            status=502,
-        )
+        raise StagingError(f"FLUX returned HTTP {resp.status_code}", status=502)
 
-    # ── Success path ─────────────────────────────────────────────
-    # Workers AI returns the image either as raw binary PNG bytes or
-    # (when called via the JSON body API) as a JSON envelope. Detect both.
+    # FLUX-schnell on CF returns JSON envelope with base64 image.
     content_type = (resp.headers.get("Content-Type") or "").lower()
-    raw_image: Optional[bytes] = None
-
     if content_type.startswith("image/"):
-        raw_image = resp.content
-        image_mime = content_type
-    else:
-        # JSON envelope path: { "result": { "image": "<base64>" } } on some models,
-        # or a base64 string directly.
-        try:
-            body = resp.json() or {}
-        except ValueError:
-            raw_image = resp.content
-            image_mime = "image/png"
-        else:
-            result = body.get("result")
-            if isinstance(result, dict) and result.get("image"):
-                raw_image = base64.b64decode(result["image"])
-                image_mime = "image/png"
-            elif isinstance(result, str):
-                raw_image = base64.b64decode(result)
-                image_mime = "image/png"
-            else:
-                _logger.error("Workers AI unexpected JSON shape: %s", str(body)[:300])
-                raise StagingError("Cloudflare returned no image in response", status=502)
+        return resp.content
+    try:
+        body = resp.json() or {}
+    except ValueError:
+        return resp.content
 
-    if not raw_image:
-        raise StagingError("Cloudflare response did not contain an image", status=502)
+    result = body.get("result")
+    if isinstance(result, dict):
+        img_b64 = result.get("image")
+        if isinstance(img_b64, str) and img_b64:
+            return base64.b64decode(img_b64)
+    if isinstance(result, str) and result:
+        return base64.b64decode(result)
+    raise StagingError("FLUX response did not contain an image", status=502)
+
+
+# ──────────────────────────────────────────────
+# Legacy SD 1.5 fallback path
+# ──────────────────────────────────────────────
+def _stage_with_sd15(resized_image_bytes: bytes, prompt: str) -> bytes:
+    """If FLUX fails, fall back to SD 1.5 img2img on the original photo."""
+    sd_image = _resize_for_sd15(resized_image_bytes)
+    url = f"{CF_BASE_URL}/{CF_ACCOUNT_ID}/ai/run/{CF_SD15_MODEL}"
+    payload = {
+        "prompt": prompt,
+        "negative_prompt": NEGATIVE_PROMPT_KEYWORDS,
+        "image": list(sd_image),
+        "strength": STAGING_STRENGTH,
+        "num_steps": STAGING_NUM_STEPS,
+        "guidance": STAGING_GUIDANCE,
+    }
+    resp = requests.post(
+        url,
+        headers={"Authorization": f"Bearer {CF_API_TOKEN}"},
+        json=payload,
+        timeout=120,
+    )
+    if resp.status_code != 200:
+        raise StagingError(f"SD 1.5 fallback failed: HTTP {resp.status_code}", status=502)
+    content_type = (resp.headers.get("Content-Type") or "").lower()
+    if content_type.startswith("image/"):
+        return resp.content
+    try:
+        body = resp.json() or {}
+    except ValueError:
+        return resp.content
+    result = body.get("result")
+    if isinstance(result, dict) and result.get("image"):
+        return base64.b64decode(result["image"])
+    raise StagingError("SD 1.5 fallback returned no image", status=502)
+
+
+# ──────────────────────────────────────────────
+# Public API
+# ──────────────────────────────────────────────
+def stage_room(
+    image_bytes: bytes,
+    mime_type: str = "image/jpeg",
+    style: Optional[str] = None,
+    room_type: Optional[str] = None,
+    hint: Optional[str] = None,
+) -> dict:
+    if not CF_ACCOUNT_ID or not CF_API_TOKEN:
+        raise StagingError("Cloudflare Workers AI credentials are not configured", status=500)
+    if not image_bytes:
+        raise StagingError("No image bytes provided", status=400)
+
+    style_key = (style or DEFAULT_STYLE).lower()
+    room_key = (room_type or "").lower().strip()
+
+    cache_key = _cache_key(image_bytes, style_key, room_key, hint or "", "flux-v1")
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        _logger.info("Staging cache HIT (%s…)", cache_key[:12])
+        return {**cached, "cached": True}
+
+    # Resize uploaded image once for both stages.
+    resized = _resize_image(image_bytes)
+
+    # Stage 1 — vision (best-effort; null-on-failure is fine).
+    vision_description = _describe_room(resized)
+    if vision_description:
+        _logger.info("LLaVA description: %s", vision_description[:120])
+
+    # Stage 2 — FLUX-schnell generation.
+    prompt = _resolve_flux_prompt(style_key, room_key, hint, vision_description)
+    pipeline = "flux+llava"
+    try:
+        raw_image = _call_flux(prompt)
+    except StagingError as flux_err:
+        if flux_err.status == 429:
+            raise
+        _logger.warning("FLUX failed, falling back to SD 1.5: %s", flux_err)
+        try:
+            raw_image = _stage_with_sd15(resized, prompt)
+            pipeline = "sd15-fallback"
+        except StagingError:
+            raise flux_err
 
     image_b64 = base64.b64encode(raw_image).decode("ascii")
     result_payload = {
         "image_base64": image_b64,
-        "image_mime": image_mime or "image/png",
-        "style": (style or DEFAULT_STYLE).lower(),
-        "room_type": (room_type or "").lower().strip(),
-        "model": CF_IMG2IMG_MODEL,
+        "image_mime": "image/png",
+        "style": style_key,
+        "room_type": room_key,
+        "model": CF_FLUX_MODEL,
+        "pipeline": pipeline,
         "prompt": prompt,
+        "vision_description": vision_description,
         "caption": None,
         "cached": False,
     }

@@ -30,6 +30,7 @@ from vastu_score import analyse_vastu_score
 from data.loader import load_product_catalog
 from utils.formatters import format_product_summary
 from staging import stage_room, StagingError
+from vastu_overlay import generate_vastu_overlay, OverlayError
 
 # Load catalog lazily to prevent startup timeouts
 _catalog = None
@@ -186,6 +187,41 @@ def stage():
     except Exception as exc:
         print(f"[STAGE] Unexpected: {exc}")
         return jsonify({"error": "Internal staging failure"}), 500
+
+
+@app.route('/api/vastu/overlay', methods=['POST'])
+def vastu_overlay():
+    """
+    Vastu HUD overlay analysis.
+
+    Multipart form:
+        image    (file)   — required, the room photo
+        roomType (text)   — optional, default 'bedroom'
+        facing   (text)   — optional, default 'N' (N|NE|E|SE|S|SW|W|NW)
+    """
+    image_file = request.files.get('image')
+    if not image_file:
+        return jsonify({"error": "image file is required"}), 400
+    image_bytes = image_file.read()
+    if not image_bytes:
+        return jsonify({"error": "uploaded image is empty"}), 400
+    if len(image_bytes) > 12 * 1024 * 1024:
+        return jsonify({"error": "image too large (max 12 MB)"}), 413
+
+    room_type = (request.form.get('roomType') or request.form.get('room_type') or 'bedroom').strip()
+    facing = (request.form.get('facing') or 'N').strip().upper()
+
+    print(f"[OVERLAY] {image_file.filename} ({len(image_bytes)} bytes) "
+          f"room={room_type!r} facing={facing!r}")
+
+    try:
+        result = generate_vastu_overlay(image_bytes, room_type=room_type, facing=facing)
+        return jsonify(result), 200
+    except OverlayError as exc:
+        return jsonify({"error": str(exc)}), getattr(exc, 'status', 502)
+    except Exception as exc:
+        print(f"[OVERLAY] Unexpected: {exc}")
+        return jsonify({"error": "Internal overlay failure"}), 500
 
 
 if __name__ == '__main__':

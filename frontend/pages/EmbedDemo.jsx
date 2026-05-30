@@ -14,10 +14,13 @@ import { MapPin, IndianRupee, Bed, Bath, Maximize2, ChevronRight, ExternalLink }
 
 const STORAGE_KEY = 'a2s-builder-account';
 
+// Fictional builder used when no workspace has been created locally yet.
+// Real builder names are NEVER hardcoded on the public site — that's both
+// trademark-unsafe and credibility-killing if HyKr asks for proof of pilot.
 const FALLBACK_BUILDER = {
-    builderId: 'lodha-demo-greens',
-    companyName: 'Lodha Group',
-    projectName: 'Lodha Greens · Wing C',
+    builderId: 'westwood-demo',
+    companyName: 'Westwood Realty',
+    projectName: 'Westwood Heights · Tower B',
 };
 
 const SPECS = [
@@ -30,7 +33,7 @@ const SPECS = [
 const EmbedDemo = () => {
     const [builder, setBuilder] = useState(FALLBACK_BUILDER);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const embedUrl = `${origin}/?builderId=${builder.builderId}#/`;
+    const embedUrl = `${origin}/?builderId=${builder.builderId}#/design`;
 
     useEffect(() => {
         try {

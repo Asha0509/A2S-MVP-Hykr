@@ -31,11 +31,13 @@ const PROJECT_TYPES = [
     { value: 'office', label: 'Office / Commercial' },
 ];
 
-const SAMPLE_KPIS = [
-    { label: 'Active homebuyers', value: 248, icon: Users, hint: 'Last 30 days' },
-    { label: 'Style quizzes',     value: 412, icon: Sparkles, hint: '+18% week-over-week' },
-    { label: 'AI staging runs',   value:  87, icon: Layers, hint: '6.4 min avg session' },
-    { label: 'Catalog impressions', value: '14.2k', icon: BarChart3, hint: 'Across 1,230 SKUs' },
+// Honest empty state — populated by real engagement events once the embed is live.
+// We deliberately do NOT seed fake numbers; investors inspect the network tab.
+const KPI_SLOTS = [
+    { label: 'Active homebuyers', icon: Users,     hint: 'Updates daily once your embed goes live' },
+    { label: 'Style quizzes',     icon: Sparkles,  hint: 'Tracked per builder workspace' },
+    { label: 'AI staging runs',   icon: Layers,    hint: 'Includes Vastu HUD analyses' },
+    { label: 'Catalog impressions', icon: BarChart3, hint: 'Surface area across all rooms' },
 ];
 
 const BuilderPortal = () => {
@@ -164,7 +166,7 @@ const BuilderPortal = () => {
                                     required
                                     value={form.companyName}
                                     onChange={handleChange('companyName')}
-                                    placeholder="Lodha Group"
+                                    placeholder="e.g. Westwood Realty"
                                     className="w-full rounded-lg border border-premium bg-main px-3 py-2 text-sm text-main focus:outline-none focus:ring-2 focus:ring-accent"
                                 />
                             </div>
@@ -174,7 +176,7 @@ const BuilderPortal = () => {
                                     required
                                     value={form.projectName}
                                     onChange={handleChange('projectName')}
-                                    placeholder="Lodha Greens, Wing C"
+                                    placeholder="e.g. Westwood Heights, Tower B"
                                     className="w-full rounded-lg border border-premium bg-main px-3 py-2 text-sm text-main focus:outline-none focus:ring-2 focus:ring-accent"
                                 />
                             </div>
@@ -245,18 +247,22 @@ const BuilderPortal = () => {
                     </button>
                 </div>
 
-                {/* KPI strip */}
+                {/* KPI strip — empty state, populated by real engagement events */}
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {SAMPLE_KPIS.map(({ icon: Icon, label, value, hint }) => (
+                    {KPI_SLOTS.map(({ icon: Icon, label, hint }) => (
                         <div key={label} className="rounded-2xl bg-surface border border-premium p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <Icon size={18} className="text-accent" />
-                                <span className="text-[10px] text-muted uppercase tracking-wide">{hint}</span>
+                                <span className="text-[10px] text-muted uppercase tracking-wide">No data yet</span>
                             </div>
-                            <p className="font-serif text-3xl font-black text-main">{value}</p>
+                            <p className="font-serif text-3xl font-black text-main">—</p>
                             <p className="text-xs text-muted">{label}</p>
+                            <p className="text-[10px] text-muted/70 mt-1 leading-snug">{hint}</p>
                         </div>
                     ))}
+                </div>
+                <div className="rounded-xl bg-accent/5 border border-accent/20 px-4 py-3 -mt-4 text-xs text-muted">
+                    <span className="text-accent font-semibold">Workspace just created.</span> Your dashboard fills in as buyers engage with your embed — no fake numbers shown.
                 </div>
 
                 {/* Embed block */}
@@ -377,9 +383,9 @@ const BuilderPortal = () => {
                 <div className="rounded-2xl bg-accent/5 border border-accent/30 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-accent">Current plan</p>
-                        <p className="font-serif text-xl text-main font-black italic mt-0.5">HyKr Launch · Free</p>
+                        <p className="font-serif text-xl text-main font-black italic mt-0.5">Pilot · No charge during MVP</p>
                         <p className="text-xs text-muted mt-1">
-                            First 100 buyer conversions are free. ₹2,500/conversion thereafter. Transparent, per-unit.
+                            Pricing will be set during pilot conversations. The product is open to builder feedback before commercial launch.
                         </p>
                     </div>
                     <Link

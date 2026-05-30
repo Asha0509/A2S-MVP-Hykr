@@ -73,10 +73,10 @@ const Home = () => {
                     </div>
 
                     <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-8">
-                        <Stat value="1,230"  label="Catalog SKUs"  sub="Real prices, real brands" />
-                        <Stat value="10"     label="Vendor brands" sub="IKEA, HomeLane, Pepperfry…" />
-                        <Stat value="6"      label="Design styles" sub="Minimal to ethnic" />
-                        <Stat value="100"    label="Vastu points"  sub="Auto-scored per room" />
+                        <Stat value="9"      label="Vendor brands" sub="IKEA · HomeLane · Pepperfry +6" />
+                        <Stat value="6"      label="Design styles" sub="Modern → Ethnic" />
+                        <Stat value="4"      label="Rooms in flow" sub="Living · Bedroom · Kitchen · Pooja" />
+                        <Stat value="100"    label="Vastu points"  sub="Auto-scored, on the photo" />
                     </div>
                 </div>
             </section>
@@ -163,11 +163,10 @@ const Home = () => {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
                         <h3 className="font-serif text-2xl sm:text-3xl text-main font-black italic leading-tight">
-                            One Droplet. Four containers. <span className="text-accent">A buyer-grade demo, today.</span>
+                            One embed. <span className="text-accent">Every buyer designs their own home.</span>
                         </h3>
                         <p className="text-sm text-muted mt-2 max-w-2xl">
-                            HyKr Build Challenge submission · Choice 2 (B2B SaaS for builders).
-                            Live at <code className="text-accent">168-144-151-227.sslip.io</code> — running the full stack on a single $24/mo DigitalOcean Droplet.
+                            Built in India for the Indian housing market. The full stack — buyer journey, Vastu HUD, AI staging, builder dashboard — runs from a single open-source repo.
                         </p>
                     </div>
                     <Link
