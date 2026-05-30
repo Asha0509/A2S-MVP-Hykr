@@ -281,7 +281,22 @@ export const trackVastuCatalogClick = async (payload) => {
 };
 
 // ============================================
-// AI ROOM STAGING (Gemini 2.5 Flash Image)
+// CATALOG BUNDLES (Build Your Home journey)
+// ============================================
+export const getSampleBundle = async ({ roomType, style, brands, limit = 6 }) => {
+    const params = new URLSearchParams({ roomType, limit: String(limit) });
+    if (style) params.set('style', style);
+    if (brands && brands.length) params.set('brands', Array.isArray(brands) ? brands.join(',') : brands);
+    try {
+        const response = await api.get(`/products/sample-bundle?${params.toString()}`);
+        return response.data;
+    } catch (error) {
+        return { roomType, style, items: [], totalEstimate: 0, currency: 'INR' };
+    }
+};
+
+// ============================================
+// AI ROOM STAGING (Cloudflare Workers AI)
 // ============================================
 export const stageRoom = async ({ image, style, roomType, hint }) => {
     const formData = new FormData();

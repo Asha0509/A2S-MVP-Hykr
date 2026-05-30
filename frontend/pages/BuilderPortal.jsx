@@ -2,10 +2,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Building2, CheckCircle2, Copy, Eye, Sparkles, Layers, Users, BarChart3,
-    ArrowRight, ExternalLink, RefreshCw,
+    ArrowRight, ExternalLink, RefreshCw, Tag, Save,
 } from 'lucide-react';
 
 const STORAGE_KEY = 'a2s-builder-account';
+
+// Brands the buyer flow can preferentially surface in catalog matches.
+// Curated from the actual scraper pool (matches `brand` values in the DB).
+const AVAILABLE_BRANDS = [
+    'IKEA', 'HomeLane', 'Pepperfry', 'WoodenStreet', 'UrbanLadder',
+    'Nilkamal', 'Godrej Interio', 'MiradorHome', 'Amazon', 'Flipkart',
+];
 
 const generateBuilderId = (name) => {
     const slug = String(name || 'builder')
@@ -59,10 +66,22 @@ const BuilderPortal = () => {
         const next = {
             ...form,
             builderId,
+            preferredBrands: ['IKEA', 'HomeLane', 'Pepperfry'], // sensible default
             createdAt: new Date().toISOString(),
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
         setAccount(next);
+    };
+
+    const togglePreferredBrand = (brand) => {
+        if (!account) return;
+        const current = account.preferredBrands || [];
+        const next = current.includes(brand)
+            ? current.filter((b) => b !== brand)
+            : [...current, brand];
+        const updated = { ...account, preferredBrands: next };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        setAccount(updated);
     };
 
     const handleReset = () => {
@@ -306,6 +325,54 @@ const BuilderPortal = () => {
                     </div>
                 </div>
 
+                {/* Preferred Brands curation — the real B2B differentiator */}
+                <div className="rounded-2xl bg-surface border border-premium p-6 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <div className="inline-flex items-center gap-2 mb-2">
+                                <Tag size={16} className="text-accent" />
+                                <h2 className="font-serif text-2xl text-main font-black italic">Curated catalog tiers</h2>
+                            </div>
+                            <p className="text-sm text-muted max-w-2xl">
+                                Pick the brands you've negotiated bulk pricing with. Every buyer who designs their home
+                                through your embed sees these brands surface first in their AI-staged renders and shopping
+                                lists. Every conversion through these brands is attributed and commissioned back to you.
+                            </p>
+                        </div>
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-accent/10 text-accent shrink-0">
+                            <Save size={11} /> Auto-saved
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                        {AVAILABLE_BRANDS.map((brand) => {
+                            const checked = (account.preferredBrands || []).includes(brand);
+                            return (
+                                <button
+                                    key={brand}
+                                    type="button"
+                                    onClick={() => togglePreferredBrand(brand)}
+                                    className={`text-left rounded-lg border px-3 py-2.5 text-xs font-semibold transition ${
+                                        checked
+                                            ? 'border-accent bg-accent/10 text-accent ring-1 ring-accent/30'
+                                            : 'border-premium text-main hover:border-accent'
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-1.5">
+                                        {checked ? <CheckCircle2 size={13} /> : <Tag size={13} className="opacity-40" />}
+                                        {brand}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <p className="text-[11px] text-muted">
+                        Selected: <span className="font-semibold text-main">{(account.preferredBrands || []).length} of {AVAILABLE_BRANDS.length} brands</span> —{' '}
+                        leave empty to show buyers all available brands without preference.
+                    </p>
+                </div>
+
                 {/* Plan tile */}
                 <div className="rounded-2xl bg-accent/5 border border-accent/30 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
@@ -316,10 +383,10 @@ const BuilderPortal = () => {
                         </p>
                     </div>
                     <Link
-                        to="/dashboard"
+                        to="/design"
                         className="inline-flex items-center gap-1.5 rounded-lg border border-accent text-accent font-semibold text-sm px-4 py-2 hover:bg-accent/10"
                     >
-                        Open buyer view (you = test buyer)
+                        Try the buyer journey
                         <ArrowRight size={14} />
                     </Link>
                 </div>

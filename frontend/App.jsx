@@ -17,6 +17,8 @@ const VastuScore = lazy(() => import('./pages/VastuScore'));
 const StageRoom = lazy(() => import('./pages/StageRoom'));
 const BuilderPortal = lazy(() => import('./pages/BuilderPortal'));
 const EmbedDemo = lazy(() => import('./pages/EmbedDemo'));
+const DesignJourney = lazy(() => import('./pages/DesignJourney'));
+const DesignSummary = lazy(() => import('./pages/DesignSummary'));
 const Waitlist = lazy(() => import('./pages/Waitlist'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
@@ -118,6 +120,8 @@ const App = () => {
                                 <Route path="/stage" element={<ProtectedRoute><StageRoom /></ProtectedRoute>} />
                                 <Route path="/builder" element={<BuilderPortal />} />
                                 <Route path="/embed-demo" element={<EmbedDemo />} />
+                                <Route path="/design" element={<DesignJourney />} />
+                                <Route path="/design/summary" element={<DesignSummary />} />
                                 <Route path="/3d-space" element={<ProtectedRoute><ThreeDSpace /></ProtectedRoute>} />
                                 <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
