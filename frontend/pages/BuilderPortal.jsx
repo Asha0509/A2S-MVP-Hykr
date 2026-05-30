@@ -118,22 +118,21 @@ const BuilderPortal = () => {
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-wide uppercase mb-3">
                         <Building2 size={14} />
-                        For Builders & Developers
+                        Builder workspace · 30-second setup
                     </div>
                     <h1 className="font-serif text-4xl sm:text-5xl text-main leading-tight font-black italic">
-                        Give every homebuyer an <span className="text-accent">AI interior designer</span>.
+                        Activate the <span className="text-accent">AI design layer</span> on your project page.
                     </h1>
                     <p className="mt-4 text-muted max-w-2xl">
-                        Embed A2S in your project's landing page. Your buyers upload their unit's layout, get AI-staged
-                        renders, run Vastu compliance scans, and walk away with a furnished home — all on your domain,
-                        all under your brand.
+                        Create a workspace, pick the brands you have deals with, drop the embed snippet on your project landing page.
+                        Your buyers self-serve the design experience — and every catalog click is attributed back to your account.
                     </p>
 
                     <div className="mt-8 grid sm:grid-cols-3 gap-3">
                         {[
-                            { icon: Sparkles, title: 'AI staging', body: 'Empty-room photo → magazine-cover render in 8 seconds.' },
-                            { icon: CheckCircle2, title: 'Vastu Score', body: '100-point room compliance audit with one-click fixes.' },
-                            { icon: Layers, title: 'Curated catalog', body: '1,230 SKUs from IKEA, Pepperfry, HomeLane and more.' },
+                            { icon: Sparkles, title: 'Live the day you embed', body: 'No integration, no SSO, no DNS. Drop a snippet, your buyers are designing within the hour.' },
+                            { icon: CheckCircle2, title: 'Vastu sells in India', body: 'Real-time Vastu compliance markers on every buyer\'s room photo — a category-defining differentiator.' },
+                            { icon: Layers, title: 'Your brands, surfaced first', body: 'Pick the vendors you have bulk pricing with. Buyers see those SKUs first in every staged room.' },
                         ].map(({ icon: Icon, title, body }) => (
                             <div key={title} className="rounded-2xl bg-surface border border-premium p-4">
                                 <Icon size={20} className="text-accent mb-2" />
@@ -199,7 +198,7 @@ const BuilderPortal = () => {
                                     type="email"
                                     value={form.contactEmail}
                                     onChange={handleChange('contactEmail')}
-                                    placeholder="asha@lodhagroup.com"
+                                    placeholder="you@yourbuildergroup.com"
                                     className="w-full rounded-lg border border-premium bg-main px-3 py-2 text-sm text-main focus:outline-none focus:ring-2 focus:ring-accent"
                                 />
                             </div>
