@@ -82,18 +82,18 @@ const Navbar = () => {
             role="navigation"
             aria-label="Main navigation"
         >
-            <div className="max-w-full mx-auto px-8 lg:px-12">
+            <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-12">
                 <div className="flex justify-between items-center h-[60px] md:h-[68px]">
-                    <div className="flex items-center -ml-8 h-full" aria-label="A2S Logo">
-                        <img 
-                            src="/A2S.jpeg" 
-                            alt="A2S Logo" 
-                            className="h-full w-auto object-contain mix-blend-multiply px-4" 
+                    <div className="flex items-center -ml-2 sm:-ml-4 lg:-ml-8 h-full" aria-label="A2S Logo">
+                        <img
+                            src="/A2S.jpeg"
+                            alt="A2S Logo"
+                            className="h-full w-auto object-contain mix-blend-multiply px-2 sm:px-4"
                         />
                     </div>
 
                     <div className="hidden md:flex items-center gap-2" role="menubar">
-                        {NAV_LINKS.filter(link => !link.authRequired || user).map(({ to, label, icon: Icon }) => (
+                        {NAV_LINKS.map(({ to, label, icon: Icon }) => (
                             to === '/3d-space' ? (
                                 <Link
                                     key={to}
@@ -224,9 +224,9 @@ const Navbar = () => {
 
                 {/* Mobile menu */}
                 {mobileOpen && (
-                    <div className="md:hidden animate-slide-down py-4 border-t border-gray-200/80 bg-main/95 backdrop-blur-sm -mx-4 px-4 rounded-b-2xl shadow-lg" role="menu">
+                    <div className="md:hidden animate-slide-down py-4 border-t border-gray-200/80 bg-main/95 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6 rounded-b-2xl shadow-lg" role="menu">
                         <div className="flex flex-col gap-1">
-                            {NAV_LINKS.filter(link => !link.authRequired || user).map(({ to, label, icon: Icon }) => (
+                            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
                                 to === '/3d-space' ? (
                                     <Link
                                         key={to}

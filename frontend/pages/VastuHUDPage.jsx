@@ -70,16 +70,16 @@ const VastuHUDPage = () => {
 
     return (
         <div className="min-h-screen bg-main">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-10">
                 <div className="mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-[0.25em] uppercase mb-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-[0.25em] uppercase mb-3">
                         <Compass size={14} />
                         Live Vastu HUD · A2S Exclusive
                     </div>
-                    <h1 className="font-serif text-4xl sm:text-5xl text-main leading-tight font-black italic">
+                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-main leading-tight font-black italic">
                         Vastu compliance, <span className="text-accent">drawn on your actual room</span>.
                     </h1>
-                    <p className="mt-3 text-muted max-w-2xl">
+                    <p className="mt-3 text-sm sm:text-base text-muted max-w-2xl">
                         Upload your room photo, pick which way it faces. Our AI identifies every object, scores the room against a 100-point
                         Vastu rule engine, and marks each violation directly on your photo — with the exact fix.
                     </p>

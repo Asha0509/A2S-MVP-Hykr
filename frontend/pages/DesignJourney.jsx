@@ -463,7 +463,7 @@ const DesignJourney = () => {
 
                 {/* Stepper — different rail for photo vs floor-plan flow. Hidden on mode select. */}
                 {step !== 'mode' && (
-                <div className="flex items-center gap-3 mb-8 text-xs">
+                <div className="flex items-center gap-2 sm:gap-3 mb-8 text-[11px] sm:text-xs overflow-x-auto -mx-1 px-1">
                     {(step === 'plan' || step === 'plan-style' || step === 'plan-stage' ? [
                         { id: 'plan',       label: 'Pick plan' },
                         { id: 'plan-style', label: 'Pick style' },
@@ -490,11 +490,56 @@ const DesignJourney = () => {
                                     {done ? '✓' : i + 1}
                                 </span>
                                 <span className={active ? 'text-main font-semibold' : 'text-muted'}>{s.label}</span>
-                                {i < 2 && <span className="text-muted">·</span>}
+                                {i < arr.length - 1 && <span className="text-muted">·</span>}
                             </div>
                         );
                     })}
                 </div>
+                )}
+
+                {/* STEP 0 — Mode select: photo vs floor plan */}
+                {step === 'mode' && (
+                    <div className="space-y-6">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <button
+                                type="button"
+                                onClick={() => { setError(null); setStep('rooms'); }}
+                                className="text-left rounded-2xl border border-premium bg-surface p-6 hover:border-accent transition group"
+                            >
+                                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition">
+                                    <Camera size={22} className="text-accent" />
+                                </div>
+                                <p className="font-serif text-xl text-main font-bold mb-1">I have my unit photos</p>
+                                <p className="text-sm text-muted">You've taken possession (or have site visit photos). We'll restyle every room you upload with geometry-preserving FLUX-dev img2img.</p>
+                                <p className="text-xs text-accent font-semibold mt-3 inline-flex items-center gap-1">
+                                    Start photo journey <ArrowRight size={13} />
+                                </p>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => { setError(null); setStep('plan'); }}
+                                className="text-left rounded-2xl border-2 border-accent bg-surface p-6 hover:opacity-90 transition group relative"
+                            >
+                                <span className="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide text-on-accent" style={{ backgroundColor: 'var(--accent)' }}>
+                                    New
+                                </span>
+                                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition">
+                                    <Map size={22} className="text-accent" />
+                                </div>
+                                <p className="font-serif text-xl text-main font-bold mb-1">I only have a floor plan</p>
+                                <p className="text-sm text-muted">Pre-possession buyers: pick a typical 1/2/3 BHK or upload the builder's plan. We'll generate every room with text-to-image — no unit photos needed.</p>
+                                <p className="text-xs text-accent font-semibold mt-3 inline-flex items-center gap-1">
+                                    Start floor-plan journey <ArrowRight size={13} />
+                                </p>
+                            </button>
+                        </div>
+                        <p className="text-xs text-muted text-center">
+                            The point-of-sale demo your builder runs is the <span className="text-accent font-semibold">floor-plan</span> path —
+                            buyers see their future home before booking. 6 to 8 seconds per room on fal.ai.
+                        </p>
+                    </div>
+                )}
 
                 {/* STEP 1 — Rooms */}
                 {step === 'rooms' && (
@@ -737,6 +782,183 @@ const DesignJourney = () => {
                                 </span>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {/* STEP P1 — Floor plan selection */}
+                {step === 'plan' && (
+                    <div className="space-y-6">
+                        <p className="text-sm text-muted -mt-3">
+                            Pick a typical Indian flat layout — or upload your builder's plan (PDF or image).
+                            The rooms will be detected automatically.
+                        </p>
+
+                        <div className="grid sm:grid-cols-3 gap-3">
+                            {FLOOR_PLANS.map((plan) => {
+                                const isSelected = selectedPlan?.key === plan.key;
+                                return (
+                                    <button
+                                        key={plan.key}
+                                        type="button"
+                                        onClick={() => handlePickPlan(plan)}
+                                        className={`text-left rounded-2xl border bg-surface p-3 transition ${
+                                            isSelected ? 'border-accent ring-2 ring-accent/30' : 'border-premium hover:border-accent'
+                                        }`}
+                                    >
+                                        <img src={plan.svg} alt={plan.label} className="w-full rounded-lg aspect-[4/3] object-contain bg-main" />
+                                        <p className="font-semibold text-main mt-3 text-sm">{plan.label}</p>
+                                        <p className="text-xs text-muted mt-0.5">{plan.blurb}</p>
+                                        <p className="text-[11px] text-accent font-semibold mt-2">
+                                            {plan.roomKeys.length} rooms · {plan.roomKeys.map((k) => PLAN_ROOM_LABELS[k]).join(', ')}
+                                        </p>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="rounded-2xl border border-dashed border-accent/40 bg-surface p-4">
+                            <label htmlFor="plan-upload" className="cursor-pointer flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                                    <FileImage size={18} className="text-accent" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-main text-sm">
+                                        {planUploadFile ? `Uploaded: ${planUploadFile.name}` : 'Or upload your own floor plan'}
+                                    </p>
+                                    <p className="text-xs text-muted">PDF, JPG or PNG · up to 25 MB · we'll default to a 1 BHK room set; switch to a hardcoded plan above if needed</p>
+                                </div>
+                                {selectedPlan?.custom && (
+                                    <CheckCircle2 size={18} className="text-accent" />
+                                )}
+                                <input
+                                    id="plan-upload"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                                    className="hidden"
+                                    onChange={(e) => handlePlanFileUpload(e.target.files?.[0])}
+                                />
+                            </label>
+                            {planUploadPreview && (
+                                <img src={planUploadPreview} alt="Your plan" className="mt-3 w-full max-h-56 object-contain rounded-lg bg-main" />
+                            )}
+                        </div>
+
+                        {error && (
+                            <p className="text-xs text-red-700 inline-flex items-center gap-1.5">
+                                <AlertTriangle size={13} /> {error}
+                            </p>
+                        )}
+
+                        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                            <button
+                                onClick={() => setStep('mode')}
+                                className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-main"
+                            >
+                                <ChevronLeft size={15} /> Back
+                            </button>
+                            <button
+                                onClick={handleConfirmPlan}
+                                disabled={!selectedPlan}
+                                style={{
+                                    backgroundColor: selectedPlan ? 'var(--accent)' : '#9CA3AF',
+                                    color: '#ffffff',
+                                }}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg font-semibold px-6 py-3 text-sm hover:opacity-90 disabled:cursor-not-allowed ml-auto"
+                            >
+                                Continue · pick style <ArrowRight size={15} />
+                            </button>
+                            <button
+                                onClick={handleTakeDemoTour}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-accent text-accent font-semibold px-6 py-3 text-sm hover:bg-accent/5"
+                            >
+                                Take the demo tour
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP P2 — Style for floor plan */}
+                {step === 'plan-style' && selectedPlan && (
+                    <div className="space-y-6">
+                        <div className="rounded-xl border border-premium bg-surface p-3 inline-flex items-center gap-3">
+                            <img
+                                src={selectedPlan.svg || selectedPlan.previewUrl}
+                                alt="Selected plan"
+                                className="w-24 h-20 object-contain bg-main rounded-md"
+                            />
+                            <div>
+                                <p className="text-sm font-semibold text-main">{selectedPlan.label}</p>
+                                <p className="text-xs text-muted">{(selectedPlan.roomKeys || []).length} rooms will be staged in your chosen style</p>
+                            </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {STYLES.map((s) => (
+                                <button
+                                    key={s.value}
+                                    type="button"
+                                    onClick={() => setStyle(s.value)}
+                                    className={`text-left rounded-2xl border bg-surface p-4 transition ${
+                                        style === s.value
+                                            ? 'border-accent ring-2 ring-accent/30'
+                                            : 'border-premium hover:border-accent'
+                                    }`}
+                                >
+                                    <p className="font-semibold text-main">{s.label}</p>
+                                    <p className="text-xs text-muted mt-0.5">{s.blurb}</p>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setStep('plan')}
+                                className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-main"
+                            >
+                                <ChevronLeft size={15} /> Change plan
+                            </button>
+                            <button
+                                onClick={runPlanStaging}
+                                style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg font-semibold px-6 py-3 text-sm hover:opacity-90 ml-auto"
+                            >
+                                Generate my future home <Sparkles size={15} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP P3 — Live progress while text-to-image staging runs */}
+                {step === 'plan-stage' && (
+                    <div className="space-y-6">
+                        <div className="rounded-2xl bg-surface border border-premium p-6 text-center">
+                            <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                                <RefreshCw size={24} className="text-accent animate-spin" />
+                            </div>
+                            <p className="font-serif text-xl text-main font-bold mb-1">
+                                Staging {planProgress.label || 'your home'}…
+                            </p>
+                            <p className="text-sm text-muted">
+                                Room {planProgress.current} of {planProgress.total} · text-to-image via fal.ai FLUX-dev
+                            </p>
+                            <div className="mt-5 h-2 bg-main rounded-full overflow-hidden">
+                                <div
+                                    className="h-full transition-all"
+                                    style={{
+                                        width: planProgress.total ? `${(planProgress.current / planProgress.total) * 100}%` : '0%',
+                                        backgroundColor: 'var(--accent)',
+                                    }}
+                                />
+                            </div>
+                            <p className="text-xs text-muted mt-4">
+                                Sit tight — each room takes about 6–8 seconds. We'll jump to the full home summary as soon as everything is staged.
+                            </p>
+                        </div>
+                        {error && (
+                            <p className="text-xs text-red-700 inline-flex items-center gap-1.5">
+                                <AlertTriangle size={13} /> {error}
+                            </p>
+                        )}
                     </div>
                 )}
             </div>

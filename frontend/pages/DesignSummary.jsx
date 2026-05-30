@@ -351,14 +351,14 @@ const DesignSummary = () => {
                 aria-labelledby="summary-hero"
                 className="border-b border-premium bg-surface"
             >
-                <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 md:flex-row md:items-center md:justify-between">
+                <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 sm:px-6 lg:px-8 pt-12 pb-8 sm:py-10 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
+                        <p className="mb-2 inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-accent">
                             <Sparkles size={14} aria-hidden="true" /> Design Summary
                         </p>
                         <h1
                             id="summary-hero"
-                            className="font-serif text-3xl text-main md:text-4xl"
+                            className="font-serif text-2xl sm:text-3xl text-main md:text-4xl"
                         >
                             Your home, fully designed.
                         </h1>
@@ -383,7 +383,7 @@ const DesignSummary = () => {
                         <button
                             type="button"
                             onClick={handleRestart}
-                            className="inline-flex items-center gap-2 rounded-md border border-premium bg-main px-4 py-2 text-sm font-medium text-main hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-premium bg-main px-4 py-2 text-sm font-medium text-main hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         >
                             <AlertTriangle size={16} aria-hidden="true" />
                             Restart
@@ -392,7 +392,7 @@ const DesignSummary = () => {
                 </div>
             </section>
 
-            <div className="mx-auto max-w-6xl space-y-10 px-4 py-10">
+            <div className="mx-auto max-w-6xl space-y-8 sm:space-y-10 px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
                 {/* Cost rollup */}
                 <section
                     aria-labelledby="cost-rollup"
@@ -411,11 +411,16 @@ const DesignSummary = () => {
                             </p>
                             <p className="mt-4 flex items-baseline gap-2">
                                 <IndianRupee
+                                    size={24}
+                                    aria-hidden="true"
+                                    className="text-accent sm:hidden"
+                                />
+                                <IndianRupee
                                     size={28}
                                     aria-hidden="true"
-                                    className="text-accent"
+                                    className="text-accent hidden sm:inline-block"
                                 />
-                                <span className="font-serif text-4xl text-main md:text-5xl">
+                                <span className="font-serif text-3xl sm:text-4xl text-main md:text-5xl">
                                     {formatCurrency(rollup.total).replace('₹', '')}
                                 </span>
                             </p>

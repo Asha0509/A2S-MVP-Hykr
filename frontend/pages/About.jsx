@@ -35,16 +35,16 @@ const About = () => {
                     <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
                 </div>
 
-                <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-16">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-[0.3em] uppercase mb-6">
+                <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-12 sm:pb-16">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase mb-5 sm:mb-6">
                         Founder · Asha Jyothi Boddu
                     </div>
 
-                    <h1 className="font-serif text-4xl sm:text-6xl text-main font-black italic leading-[1.05] max-w-4xl">
+                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-main font-black italic leading-[1.05] max-w-4xl">
                         I spent <span className="text-accent">eighteen months</span> watching Indian homebuyers struggle with the same three things.
                     </h1>
 
-                    <div className="mt-8 space-y-5 text-base sm:text-lg text-muted max-w-3xl leading-relaxed">
+                    <div className="mt-7 sm:mt-8 space-y-4 sm:space-y-5 text-sm sm:text-lg text-muted max-w-3xl leading-relaxed">
                         <p>
                             I started A2S in 2024 as a consumer-facing interior design service — visit the home, recommend a style,
                             source furniture, coordinate vendors. Operationally heavy. Margin-thin. I ran 30+ projects with friends
@@ -71,12 +71,12 @@ const About = () => {
             </section>
 
             <section className="bg-surface border-y border-premium">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-                    <p className="text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">What's actually in the MVP</p>
-                    <h2 className="font-serif text-2xl sm:text-3xl text-main font-black italic max-w-3xl">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] text-accent mb-3">What's actually in the MVP</p>
+                    <h2 className="font-serif text-xl sm:text-3xl text-main font-black italic max-w-3xl">
                         Honest scope. No vapor.
                     </h2>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-7 sm:mt-8">
                         <Pillar icon={Building2} title="Builder portal" body="Account, embed snippet, curated brand tiers. Live and persistent in this build." />
                         <Pillar icon={Layers} title="3-step buyer journey" body="Pick rooms → pick style → stage each. State persists across refresh." />
                         <Pillar icon={Cpu} title="FLUX-schnell + LLaVA pipeline" body="Vision describes the room; FLUX-1-schnell generates magazine-grade renders. Free tier." />
@@ -85,12 +85,12 @@ const About = () => {
                 </div>
             </section>
 
-            <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-                <p className="text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">Where this stops being an MVP</p>
-                <h2 className="font-serif text-2xl sm:text-3xl text-main font-black italic max-w-3xl mb-6">
+            <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] text-accent mb-3">Where this stops being an MVP</p>
+                <h2 className="font-serif text-xl sm:text-3xl text-main font-black italic max-w-3xl mb-6">
                     What I'd build with your check.
                 </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                         { milestone: 'Months 1–3', headline: 'First 3 builder pilots', detail: 'Mid-tier Bangalore + Pune builders. Embed live on real project landing pages. Real engagement data populating the dashboards I deliberately did NOT fake.' },
                         { milestone: 'Months 4–6', headline: 'Proprietary Vastu corpus', detail: 'Train a custom Vastu compliance model on 10k+ Indian floor plans. Goes from rule-engine to ML-grade. This is the data moat.' },
@@ -107,9 +107,9 @@ const About = () => {
             </section>
 
             <section className="bg-surface border-t border-premium">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-                    <p className="text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">Get in touch</p>
-                    <h2 className="font-serif text-3xl text-main font-black italic">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] text-accent mb-3">Get in touch</p>
+                    <h2 className="font-serif text-2xl sm:text-3xl text-main font-black italic">
                         Reach out — pilot, press, partnership, or critique.
                     </h2>
                     <p className="text-sm text-muted mt-2">
@@ -190,9 +190,9 @@ const About = () => {
                         </form>
                     )}
 
-                    <div className="flex items-center gap-4 mt-8 text-sm text-muted">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-8 text-sm text-muted">
                         <span className="inline-flex items-center gap-1.5"><MapPin size={14} className="text-accent" /> Hyderabad, India</span>
-                        <span>·</span>
+                        <span className="hidden sm:inline">·</span>
                         <a href="https://github.com/Asha0509/A2S-MVP-Hykr" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 hover:text-accent">
                             <Github size={14} /> GitHub
                         </a>

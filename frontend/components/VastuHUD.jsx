@@ -56,6 +56,7 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
     const [hoveredViolation, setHoveredViolation] = useState(null);
     const [imgEl, setImgEl] = useState(null);
     const [dimensions, setDimensions] = useState({ w: 0, h: 0 });
+    const [resizeTick, setResizeTick] = useState(0);
 
     useEffect(() => {
         if (!imageSrc) return;
@@ -64,6 +65,21 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
         img.onload = () => setImgEl(img);
         img.src = imageSrc;
     }, [imageSrc]);
+
+    // Re-render the canvas when the container width changes (rotate, resize,
+    // mobile orientation flip). Throttled via requestAnimationFrame.
+    useEffect(() => {
+        let raf = null;
+        const handle = () => {
+            if (raf) cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(() => setResizeTick((t) => t + 1));
+        };
+        window.addEventListener('resize', handle);
+        return () => {
+            window.removeEventListener('resize', handle);
+            if (raf) cancelAnimationFrame(raf);
+        };
+    }, []);
 
     useEffect(() => {
         if (!imgEl || !canvasRef.current) return;
@@ -150,7 +166,7 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
 
         // 3. compass top-right
         drawCompass(ctx, w - 70, 70, overlay.facing || 'N');
-    }, [imgEl, overlay, dimensions.w]);
+    }, [imgEl, overlay, dimensions.w, resizeTick]);
 
     const drawCompass = (ctx, cx, cy, facing) => {
         const radius = 40;
@@ -213,14 +229,14 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
             {/* Top bar: score + facing selector */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <ScoreBadge />
-                <div className="inline-flex items-center gap-1 rounded-lg bg-surface border border-premium p-1">
-                    <span className="text-[10px] text-muted uppercase tracking-wider px-2 font-semibold">Faces</span>
+                <div className="flex items-center gap-1 rounded-lg bg-surface border border-premium p-1 w-full sm:w-auto overflow-x-auto">
+                    <span className="text-[10px] text-muted uppercase tracking-wider px-2 font-semibold shrink-0">Faces</span>
                     {DIRECTIONS.map((d) => (
                         <button
                             key={d}
                             type="button"
                             onClick={() => onChangeFacing && onChangeFacing(d)}
-                            className={`text-[11px] font-bold px-2 py-1 rounded transition ${
+                            className={`text-[11px] font-bold px-2 py-1 rounded transition shrink-0 ${
                                 overlay?.facing === d ? 'text-on-accent' : 'text-muted hover:text-main'
                             }`}
                             style={{
@@ -234,7 +250,7 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
             </div>
 
             {/* Canvas-rendered photo with overlays */}
-            <div ref={wrapRef} className="relative rounded-2xl overflow-hidden bg-black" style={{ minHeight: 320 }}>
+            <div ref={wrapRef} className="relative rounded-2xl overflow-hidden bg-black min-h-[220px] sm:min-h-[320px]">
                 <canvas ref={canvasRef} className="block w-full" />
                 {loading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-white">
