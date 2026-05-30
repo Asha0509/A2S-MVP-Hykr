@@ -1,0 +1,34 @@
+# A2S MVP — Caddy reverse proxy with auto-LE on sslip.io subdomain.
+# Replace the host on the first line with your Droplet IP in dashed form.
+# sslip.io maps `1-2-3-4.sslip.io` → IP `1.2.3.4` with no DNS setup required.
+
+168-144-151-227.sslip.io {
+    encode gzip zstd
+
+    # All /api/*, /oauth2/*, /login/oauth2/* etc go through the frontend nginx
+    # which already proxies them to the backend container internally.
+    reverse_proxy localhost:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Belt-and-suspenders security headers (frontend nginx also sets these,
+    # Caddy applies them at the edge in case the container is replaced).
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/a2s-access.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+        format console
+    }
+}
