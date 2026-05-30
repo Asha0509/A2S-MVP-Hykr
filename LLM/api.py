@@ -173,8 +173,16 @@ def stage():
         )
         return jsonify(result), 200
     except StagingError as exc:
-        print(f"[STAGE] StagingError: {exc}")
-        return jsonify({"error": str(exc)}), 502
+        status = getattr(exc, "status", 502)
+        retry_after = getattr(exc, "retry_after", None)
+        print(f"[STAGE] StagingError ({status}): {exc}")
+        payload = {"error": str(exc)}
+        if retry_after is not None:
+            payload["retry_after"] = retry_after
+        response = jsonify(payload)
+        if retry_after is not None:
+            response.headers["Retry-After"] = str(retry_after)
+        return response, status
     except Exception as exc:
         print(f"[STAGE] Unexpected: {exc}")
         return jsonify({"error": "Internal staging failure"}), 500

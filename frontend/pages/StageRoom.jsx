@@ -79,6 +79,18 @@ const StageRoom = () => {
             setResult(data);
         } catch (err) {
             setError(err?.error || 'AI staging failed. Try a clearer photo or a different style.');
+            if (err?.rateLimited && err?.retry_after) {
+                let countdown = Number(err.retry_after);
+                const tick = setInterval(() => {
+                    countdown -= 1;
+                    if (countdown <= 0) {
+                        clearInterval(tick);
+                        setError(null);
+                    } else {
+                        setError(`Rate limit cools down in ${countdown}s… (or enable billing on Google AI Studio for higher RPM)`);
+                    }
+                }, 1000);
+            }
         } finally {
             setLoading(false);
         }

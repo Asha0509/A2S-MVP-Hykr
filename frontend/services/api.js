@@ -297,7 +297,17 @@ export const stageRoom = async ({ image, style, roomType, hint }) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || { error: 'AI room staging failed. Please try again.' };
+        const status = error.response?.status;
+        const payload = error.response?.data || {};
+        if (status === 429) {
+            const wait = payload.retry_after ? `${payload.retry_after}s` : 'about a minute';
+            throw {
+                error: payload.error || `Gemini's free tier is rate-limited right now. Try again in ${wait}, or enable billing on Google AI Studio to remove the per-minute cap.`,
+                retry_after: payload.retry_after,
+                rateLimited: true,
+            };
+        }
+        throw payload.error ? payload : { error: 'AI room staging failed. Please try again.' };
     }
 };
 // ============================================

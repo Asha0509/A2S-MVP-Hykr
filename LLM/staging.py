@@ -11,8 +11,12 @@ The Gemini Image API returns base64 PNG bytes inline in the response.
 from __future__ import annotations
 
 import base64
+import hashlib
 import logging
 import os
+import re
+import threading
+from collections import OrderedDict
 from typing import Optional
 
 import requests
@@ -20,6 +24,41 @@ import requests
 from config import get_secret
 
 _logger = logging.getLogger(__name__)
+
+# Tiny LRU cache so re-recording the demo with the same photo + style doesn't
+# burn Gemini quota on every take. Keyed by SHA-256 of (image bytes, style,
+# room_type, hint). Capped at 50 entries (each is ~1–3 MB of base64).
+_CACHE_MAX = 50
+_cache: "OrderedDict[str, dict]" = OrderedDict()
+_cache_lock = threading.Lock()
+
+
+def _cache_key(image_bytes: bytes, style: str, room_type: str, hint: str) -> str:
+    h = hashlib.sha256()
+    h.update(image_bytes)
+    h.update(b"|")
+    h.update((style or "").encode("utf-8"))
+    h.update(b"|")
+    h.update((room_type or "").encode("utf-8"))
+    h.update(b"|")
+    h.update((hint or "").encode("utf-8"))
+    return h.hexdigest()
+
+
+def _cache_get(key: str) -> Optional[dict]:
+    with _cache_lock:
+        if key in _cache:
+            _cache.move_to_end(key)
+            return _cache[key]
+    return None
+
+
+def _cache_put(key: str, value: dict) -> None:
+    with _cache_lock:
+        _cache[key] = value
+        _cache.move_to_end(key)
+        while len(_cache) > _CACHE_MAX:
+            _cache.popitem(last=False)
 
 GEMINI_API_KEY = get_secret("GEMINI_API_KEY")
 GEMINI_IMAGE_MODEL = os.environ.get("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image")
@@ -77,6 +116,11 @@ MAX_PROMPT_HINT_LEN = 400
 class StagingError(Exception):
     """Raised when the Gemini API fails or returns unusable output."""
 
+    def __init__(self, message: str, *, status: int = 502, retry_after: Optional[int] = None):
+        super().__init__(message)
+        self.status = status
+        self.retry_after = retry_after
+
 
 def _resolve_prompt(style: Optional[str], room_type: Optional[str], hint: Optional[str]) -> str:
     base = STYLE_PROMPTS.get((style or "").lower().strip(), STYLE_PROMPTS[DEFAULT_STYLE])
@@ -113,11 +157,18 @@ def stage_room(
     in response).
     """
     if not GEMINI_API_KEY:
-        raise StagingError("GEMINI_API_KEY is not configured")
+        raise StagingError("GEMINI_API_KEY is not configured", status=500)
     if not image_bytes:
-        raise StagingError("No image bytes provided")
+        raise StagingError("No image bytes provided", status=400)
 
     prompt = _resolve_prompt(style, room_type, hint)
+
+    cache_key = _cache_key(image_bytes, style or "", room_type or "", hint or "")
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        _logger.info("Staging cache HIT (%s…)", cache_key[:12])
+        return {**cached, "cached": True}
+
     b64_image = base64.b64encode(image_bytes).decode("ascii")
 
     payload = {
@@ -153,7 +204,18 @@ def stage_room(
 
     if resp.status_code != 200:
         _logger.error("Gemini API non-200: %s — %s", resp.status_code, resp.text[:500])
-        raise StagingError(f"Gemini API returned HTTP {resp.status_code}")
+        if resp.status_code == 429:
+            retry_after = _extract_retry_after(resp)
+            wait_msg = f"about {retry_after} seconds" if retry_after else "a minute"
+            raise StagingError(
+                f"Gemini's free tier rate limit reached. Try again in {wait_msg}, "
+                f"or enable billing on Google AI Studio for higher per-minute limits.",
+                status=429,
+                retry_after=retry_after,
+            )
+        if resp.status_code in (401, 403):
+            raise StagingError("Gemini rejected the API key (auth error). Check GEMINI_API_KEY.", status=502)
+        raise StagingError(f"Gemini API returned HTTP {resp.status_code}", status=502)
 
     body = resp.json()
     candidates = body.get("candidates") or []
@@ -173,9 +235,9 @@ def stage_room(
             text_caption = part["text"]
 
     if not image_b64:
-        raise StagingError("Gemini response did not include an image")
+        raise StagingError("Gemini response did not include an image", status=502)
 
-    return {
+    result = {
         "image_base64": image_b64,
         "image_mime": image_mime,
         "style": (style or DEFAULT_STYLE).lower(),
@@ -183,4 +245,27 @@ def stage_room(
         "model": GEMINI_IMAGE_MODEL,
         "prompt": prompt,
         "caption": text_caption,
+        "cached": False,
     }
+    _cache_put(cache_key, result)
+    return result
+
+
+def _extract_retry_after(resp: requests.Response) -> Optional[int]:
+    """Pull a retry-delay (seconds) out of a Gemini 429 response if present."""
+    header = resp.headers.get("Retry-After")
+    if header and header.strip().isdigit():
+        return int(header.strip())
+    try:
+        body = resp.json() or {}
+        details = (body.get("error") or {}).get("details") or []
+        for entry in details:
+            delay = entry.get("retryDelay") or entry.get("retry_delay")
+            if not delay:
+                continue
+            match = re.match(r"^(\d+(?:\.\d+)?)s$", str(delay).strip())
+            if match:
+                return int(float(match.group(1)))
+    except (ValueError, KeyError, AttributeError):
+        pass
+    return None
