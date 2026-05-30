@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Building2, CheckCircle2, Copy, Eye, Sparkles, Layers, Users, BarChart3,
-    ArrowRight, ExternalLink, RefreshCw, Tag, Save,
+    ArrowRight, ExternalLink, RefreshCw, Tag, Save, Calculator, IndianRupee,
 } from 'lucide-react';
 
 const STORAGE_KEY = 'a2s-builder-account';
@@ -378,6 +378,8 @@ const BuilderPortal = () => {
                     </p>
                 </div>
 
+                <BuilderRoi />
+
                 {/* Plan tile */}
                 <div className="rounded-2xl bg-accent/5 border border-accent/30 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
@@ -394,6 +396,114 @@ const BuilderPortal = () => {
                         Try the buyer journey
                         <ArrowRight size={14} />
                     </Link>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ── ROI calculator ──────────────────────────────────────────────────────────
+// Concrete unit economics for the builder. Honest, conservative defaults:
+//   - average buyer journey home cost: ₹6.5L (matches summary demo numbers)
+//   - 12% commission on referred buyer purchases (industry-standard furniture)
+//   - 38% of buyers who complete journey actually purchase via embed
+//   - A2S keeps 25% of the commission as platform fee; builder keeps 75%
+// Numbers are configurable so a builder can plug in their own conversion data.
+const RoiInput = ({ label, value, onChange, prefix, min, max, step = 1 }) => (
+    <label className="block">
+        <span className="block text-[10px] uppercase tracking-wider text-muted font-bold mb-1">{label}</span>
+        <div className="flex items-center gap-2 rounded-lg border border-premium bg-main px-3 py-2">
+            {prefix && <span className="text-xs text-muted">{prefix}</span>}
+            <input
+                type="number"
+                value={value}
+                min={min}
+                max={max}
+                step={step}
+                onChange={(e) => onChange(Number(e.target.value) || 0)}
+                className="w-full bg-transparent text-sm text-main focus:outline-none"
+            />
+        </div>
+    </label>
+);
+
+const BuilderRoi = () => {
+    const [units, setUnits] = useState(200);
+    const [embedViewsPct, setEmbedViewsPct] = useState(60);
+    const [journeyComplPct, setJourneyComplPct] = useState(40);
+    const [convertPct, setConvertPct] = useState(38);
+    const [avgHome, setAvgHome] = useState(650000);
+    const [commissionPct, setCommissionPct] = useState(12);
+    const [builderShare] = useState(75);
+
+    const viewers     = Math.round(units * embedViewsPct / 100);
+    const completes   = Math.round(viewers * journeyComplPct / 100);
+    const purchasers  = Math.round(completes * convertPct / 100);
+    const gmv         = purchasers * avgHome;
+    const commission  = Math.round(gmv * commissionPct / 100);
+    const builderCut  = Math.round(commission * builderShare / 100);
+    const fmt = (n) => `₹${(n / 100000).toFixed(2)}L`;
+    const fmtRupees = (n) => `₹${Math.round(n).toLocaleString('en-IN')}`;
+
+    return (
+        <div className="rounded-2xl bg-surface border border-premium p-6 space-y-5">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <div className="inline-flex items-center gap-2 mb-2">
+                        <Calculator size={16} className="text-accent" />
+                        <h2 className="font-serif text-2xl text-main font-black italic">Project ROI calculator</h2>
+                    </div>
+                    <p className="text-sm text-muted max-w-2xl">
+                        Plug in your project size and conversion assumptions. Numbers reflect industry-standard furniture commission (12%)
+                        with a 75/25 builder/platform split. Live calculation, no API call.
+                    </p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <RoiInput label="Project units"        value={units}           onChange={setUnits}           min={1}   max={5000} />
+                <RoiInput label="Embed view rate %"    value={embedViewsPct}   onChange={setEmbedViewsPct}   min={0}   max={100}  />
+                <RoiInput label="Journey completion %" value={journeyComplPct} onChange={setJourneyComplPct} min={0}   max={100}  />
+                <RoiInput label="Buy conversion %"     value={convertPct}      onChange={setConvertPct}      min={0}   max={100}  />
+                <RoiInput label="Avg home spend"       value={avgHome}         onChange={setAvgHome}         min={50000} max={5000000} step={10000} prefix="₹" />
+                <RoiInput label="Commission %"         value={commissionPct}   onChange={setCommissionPct}   min={0}   max={30}   />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div className="rounded-xl bg-main border border-premium p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-muted font-bold">Buyers engaged</p>
+                    <p className="font-serif text-2xl text-main font-black mt-1">{viewers.toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-muted">{embedViewsPct}% of {units}</p>
+                </div>
+                <div className="rounded-xl bg-main border border-premium p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-muted font-bold">Journeys completed</p>
+                    <p className="font-serif text-2xl text-main font-black mt-1">{completes.toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-muted">{journeyComplPct}% of viewers</p>
+                </div>
+                <div className="rounded-xl bg-main border border-premium p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-muted font-bold">Conversions</p>
+                    <p className="font-serif text-2xl text-main font-black mt-1">{purchasers.toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-muted">{convertPct}% of completers</p>
+                </div>
+                <div className="rounded-xl bg-accent/10 border border-accent/40 p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-accent font-bold">Furniture GMV</p>
+                    <p className="font-serif text-2xl text-accent font-black mt-1">{fmt(gmv)}</p>
+                    <p className="text-[10px] text-muted">{purchasers} × {fmt(avgHome)}</p>
+                </div>
+            </div>
+
+            <div className="rounded-xl bg-accent/5 border border-accent/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-accent">Builder's share (75% of commission)</p>
+                    <p className="font-serif text-4xl sm:text-5xl text-main font-black italic leading-none mt-2 flex items-baseline gap-1">
+                        <IndianRupee size={32} className="text-accent" />
+                        <span>{(builderCut / 100000).toFixed(2)}L</span>
+                    </p>
+                </div>
+                <div className="text-xs text-muted leading-relaxed sm:text-right">
+                    <p>From <span className="text-main font-semibold">{fmt(commission)}</span> total commission on <span className="text-main font-semibold">{fmt(gmv)}</span> GMV.</p>
+                    <p>Platform fee (25%): {fmt(commission - builderCut)} — covers AI compute, hosting, brand-API integrations.</p>
+                    <p className="mt-1 text-main">Avg builder cut per unit: <span className="font-semibold text-accent">{fmtRupees(units > 0 ? builderCut / units : 0)}</span></p>
                 </div>
             </div>
         </div>

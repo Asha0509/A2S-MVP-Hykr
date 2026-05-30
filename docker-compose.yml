@@ -81,6 +81,8 @@ services:
       CF_ACCOUNT_ID: ${CF_ACCOUNT_ID:-}
       CF_API_TOKEN: ${CF_API_TOKEN:-}
       CF_IMG2IMG_MODEL: ${CF_IMG2IMG_MODEL:-@cf/runwayml/stable-diffusion-v1-5-img2img}
+      FAL_API_KEY: ${FAL_API_KEY:-}
+      FAL_IMG2IMG_MODEL: ${FAL_IMG2IMG_MODEL:-fal-ai/flux/dev/image-to-image}
       VASTU_AUTO_MIN_CONFIDENCE: ${VASTU_AUTO_MIN_CONFIDENCE:-0.65}
       VASTU_AUTO_TARGET_ACCURACY: ${VASTU_AUTO_TARGET_ACCURACY:-0.87}
       FLASK_ENV: production

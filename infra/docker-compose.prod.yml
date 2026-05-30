@@ -44,6 +44,8 @@ services:
       CF_ACCOUNT_ID: ${CF_ACCOUNT_ID:-}
       CF_API_TOKEN: ${CF_API_TOKEN:-}
       CF_IMG2IMG_MODEL: ${CF_IMG2IMG_MODEL:-@cf/runwayml/stable-diffusion-v1-5-img2img}
+      FAL_API_KEY: ${FAL_API_KEY:-}
+      FAL_IMG2IMG_MODEL: ${FAL_IMG2IMG_MODEL:-fal-ai/flux/dev/image-to-image}
     # No host port binding — frontend nginx reaches the LLM service as
     # `http://a2s-llm:5001` on the docker network. See the backend block
     # above for the same rationale.
