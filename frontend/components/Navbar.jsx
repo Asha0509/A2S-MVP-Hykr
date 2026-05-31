@@ -114,80 +114,13 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center gap-1">
-                        {user && (
-                            <Link to="/dashboard" className="p-2.5 text-gray-500 hover:text-accent rounded-lg transition relative focus-premium" aria-label="Your A2S dashboard">
-                                <LayoutGrid size={20} />
-                            </Link>
-                        )}
-                        {user ? (
-                            <div className="relative hidden sm:block">
-                                <button
-                                    type="button"
-                                    onClick={() => setAccountOpen(!accountOpen)}
-                                    className="w-10 h-10 rounded-full bg-accent text-xs font-black transition hover:opacity-90 flex items-center justify-center focus-premium text-on-accent"
-                                    aria-label="Account menu"
-                                    aria-expanded={accountOpen}
-                                    aria-haspopup="true"
-                                    id="nav-account"
-                                >
-                                    <span>{(user.name || user.email || 'U').charAt(0).toUpperCase()}</span>
-                                </button>
-                                {accountOpen && (
-                                    <div className="absolute right-0 top-full mt-3 py-3 w-64 glass-premium rounded-3xl shadow-2xl z-50 animate-scale-in border border-white/20" role="menu">
-                                        <div className="px-5 py-2 border-b border-white/5 mb-2">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Your Account</p>
-                                        </div>
-                                        <div className="px-5 py-3 border-b border-white/5 mb-2 flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-main/5 flex items-center justify-center text-accent border border-white/5">
-                                                <User size={18} />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-black text-main uppercase tracking-widest truncate">{user.name || 'Member'}</p>
-                                                <p className="text-[10px] text-muted truncate">{user.email}</p>
-                                            </div>
-                                        </div>
-
-
-
-                                        <div className="py-2 border-b border-white/5 mb-2">
-                                            <Link
-                                                id="nav-dashboard-menu"
-                                                to="/dashboard"
-                                                role="menuitem"
-                                                className="block px-5 py-3 text-[11px] font-black text-main opacity-80 hover:opacity-100 hover:bg-white/5 transition uppercase tracking-[0.2em]"
-                                                onClick={() => setAccountOpen(false)}
-                                            >
-                                                My Dashboard
-                                            </Link>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setIsTutorialOpen(true); setAccountOpen(false); }}
-                                                className="w-full flex items-center gap-3 px-5 py-3 text-[10px] font-black text-accent hover:bg-white/5 transition uppercase tracking-[0.2em] text-left"
-                                            >
-                                                <PlayCircle size={14} className="animate-pulse" />
-                                                Show Tour
-                                            </button>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={initiateLogout}
-                                            role="menuitem"
-                                            className="w-full flex items-center gap-2 px-5 py-3 text-[11px] font-bold text-red-400 hover:bg-red-500/10 transition text-left uppercase tracking-widest"
-                                        >
-                                            <LogOut size={14} /> Log out
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <Link
-                                to="/login"
-                                className="hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-accent hover:opacity-90 transition shadow-lg focus-premium animate-pulse-glow"
-                                style={{ color: '#131A20' }}
-                            >
-                                Sign In
-                            </Link>
-                        )}
+                        <Link
+                            to="/dashboard"
+                            className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-accent hover:opacity-90 transition shadow-lg focus-premium"
+                            style={{ color: '#131A20' }}
+                        >
+                            <LayoutGrid size={14} /> Your A2S
+                        </Link>
                         <button
                             type="button"
                             onClick={() => setMobileOpen(!mobileOpen)}
@@ -219,21 +152,9 @@ const Navbar = () => {
                                     </Link>
                             ))}
 
-                            {user ? (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                    <p className="px-4 py-1 text-xs text-gray-500 truncate">{user.name}</p>
-                                    <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-accent/10" onClick={() => setMobileOpen(false)}>
-                                        Dashboard
-                                    </Link>
-                                    <button type="button" onClick={() => { initiateLogout(); setMobileOpen(false); }} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left">
-                                        <LogOut size={18} /> Log out
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link to="/login" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-accent mt-2 border-t border-gray-200 pt-2" onClick={() => setMobileOpen(false)}>
-                                    Sign in
-                                </Link>
-                            )}
+                            <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-accent mt-2 border-t border-gray-200 pt-3" onClick={() => setMobileOpen(false)}>
+                                <LayoutGrid size={18} /> Your A2S
+                            </Link>
                         </div>
                     </div>
                 )}

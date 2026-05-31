@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -128,7 +128,6 @@ const App = () => {
             <Router>
                 <ScrollToTop />
                 <BuilderAttributionBootstrap />
-                <OAuthTokenBootstrap />
                 <Shell />
             </Router>
         </ErrorBoundary>
@@ -145,13 +144,13 @@ const Shell = () => {
                 <Suspense fallback={<PageLoader />}>
                     <Routes>
                                 <Route path="/" element={<Home />} />
-                                <Route path="/login" element={<Login />} />
+                                <Route path="/login" element={<Navigate to="/dashboard" replace />} />
                                 
                                 {/* Protected Routes */}
                                 <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
                                 <Route path="/design/:id" element={<ProtectedRoute><DesignDetail /></ProtectedRoute>} />
                                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                                <Route path="/dashboard" element={<Dashboard />} />
                                 <Route path="/vastu-score" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
                                 <Route path="/vinsight" element={<ProtectedRoute><VastuScore /></ProtectedRoute>} />
                                 <Route path="/stage" element={<StageRoom />} />
