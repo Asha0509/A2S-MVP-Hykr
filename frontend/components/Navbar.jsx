@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Heart, User, Search, X, LogOut, ChevronDown, Lock, Building2, Layers, Eye, Compass, Image as ImageIcon, Wand2 } from 'lucide-react';
+import { Menu, User, X, LogOut, ChevronDown, Building2, Layers, Eye, Compass, Image as ImageIcon, Wand2, LayoutGrid } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import TutorialGuide from './TutorialGuide';
 import ConfirmationModal from './ConfirmationModal';
@@ -94,51 +94,29 @@ const Navbar = () => {
 
                     <div className="hidden md:flex items-center gap-2" role="menubar">
                         {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-                            to === '/3d-space' ? (
-                                <Link
-                                    key={to}
-                                    id="nav-3d-space"
-                                    to="/dashboard"
-                                    state={{ activeView: '3d-studio' }}
-                                    className={`relative px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all focus-premium flex items-center gap-2 group ${isActive('/dashboard') && location.state?.activeView === '3d-studio' ? 'text-main bg-accent/10' : 'text-gray-500 hover:text-main hover:bg-gray-50'}`}
-                                >
-                                    <span>{label}</span>
-                                    <Lock size={10} className="text-accent/40" />
-                                </Link>
-                            ) : (
-                                <Link
-                                    key={to}
-                                    id={`nav-${label.toLowerCase().replace(' ', '-')}`}
-                                    to={to}
-                                    role="menuitem"
-                                    className={`relative px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all focus-premium ${isActive(to)
-                                        ? 'text-main bg-accent/10'
-                                        : 'text-gray-500 hover:text-main hover:bg-gray-50'
-                                        }`}
-                                    aria-current={isActive(to) ? 'page' : undefined}
-                                >
-                                    {Icon ? <span className="flex items-center gap-2"><Icon size={14} /> {label}</span> : label}
-                                    {isActive(to) && (
-                                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent rounded-full" />
-                                    )}
-                                </Link>
-                            )
+                            <Link
+                                key={to}
+                                id={`nav-${label.toLowerCase().replace(' ', '-')}`}
+                                to={to}
+                                role="menuitem"
+                                className={`relative px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all focus-premium ${isActive(to)
+                                    ? 'text-main bg-accent/10'
+                                    : 'text-gray-500 hover:text-main hover:bg-gray-50'
+                                    }`}
+                                aria-current={isActive(to) ? 'page' : undefined}
+                            >
+                                {Icon ? <span className="flex items-center gap-2"><Icon size={14} /> {label}</span> : label}
+                                {isActive(to) && (
+                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent rounded-full" />
+                                )}
+                            </Link>
                         ))}
                     </div>
 
                     <div className="flex items-center gap-1">
-                        <button type="button" className="p-2.5 text-gray-500 hover:text-accent hover:bg-gray-100 rounded-lg transition focus-premium" aria-label="Search designs and products">
-                            <Search size={20} />
-                        </button>
-
                         {user && (
-                            <Link to="/dashboard" className="p-2.5 text-gray-500 hover:text-accent rounded-lg transition relative focus-premium" aria-label={`Saved designs${savedCount > 0 ? `, ${savedCount} items` : ''}`}>
-                                <Heart size={20} />
-                                {savedCount > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full px-1 animate-scale-in">
-                                        {savedCount > 99 ? '99+' : savedCount}
-                                    </span>
-                                )}
+                            <Link to="/dashboard" className="p-2.5 text-gray-500 hover:text-accent rounded-lg transition relative focus-premium" aria-label="Your A2S dashboard">
+                                <LayoutGrid size={20} />
                             </Link>
                         )}
                         {user ? (
@@ -227,21 +205,6 @@ const Navbar = () => {
                     <div className="md:hidden animate-slide-down py-4 border-t border-gray-200/80 bg-main/95 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6 rounded-b-2xl shadow-lg" role="menu">
                         <div className="flex flex-col gap-1">
                             {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-                                to === '/3d-space' ? (
-                                    <Link
-                                        key={to}
-                                        to="/dashboard"
-                                        state={{ activeView: '3d-studio' }}
-                                        onClick={() => setMobileOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-accent/10 hover:text-main w-full text-left transition-all"
-                                    >
-                                        {Icon && <Icon size={18} className="text-accent" />}
-                                        <div className="flex items-center gap-2">
-                                            <span>{label}</span>
-                                            <Lock size={10} className="text-accent/40" />
-                                        </div>
-                                    </Link>
-                                ) : (
                                     <Link
                                         key={to}
                                         to={to}
@@ -254,7 +217,6 @@ const Navbar = () => {
                                         {Icon && <Icon size={18} />}
                                         {label}
                                     </Link>
-                                )
                             ))}
 
                             {user ? (
