@@ -5,6 +5,7 @@
 Builders embed A2S in their project landing pages. Their homebuyers then design every room of their unit — using AI room-staging, automated Vastu compliance, and a curated furniture catalog the builder pre-selects. A2S handles the experience; the builder owns the buyer and earns commissions on every conversion.
 
 > Submission for the HyKr Build Challenge — May 2026.
+> **The 2-minute company overview is [`FUNDING_HANDBOOK.md`](./FUNDING_HANDBOOK.md)** — vision, market, traction, unit economics, roadmap, cap table.
 
 ---
 
@@ -13,19 +14,21 @@ Builders embed A2S in their project landing pages. Their homebuyers then design 
 | Surface | URL |
 |---|---|
 | Public app | <https://168-144-151-227.sslip.io> |
-| Founder / About | <https://168-144-151-227.sslip.io/#/about> |
-| Builder workspace | <https://168-144-151-227.sslip.io/#/builder> |
-| Buyer journey (live FLUX-1-schnell) | <https://168-144-151-227.sslip.io/#/design> |
-| Buyer journey (instant demo tour) | <https://168-144-151-227.sslip.io/#/design> → "Take the 1-click demo tour" |
-| Vastu HUD (the visible USP) | <https://168-144-151-227.sslip.io/#/vastu-hud> |
-| Embed preview (fictional builder) | <https://168-144-151-227.sslip.io/#/embed-demo> |
+| **Instant Design** — sentence → full home | `/#/instant` |
+| Build My Home — multi-room journey | `/#/design` |
+| Build My Home — 1-click demo tour | `/#/design` → "Take the 1-click demo tour" |
+| Vastu HUD — markers on your photo | `/#/vastu-hud` |
+| Showcase — renders + style compare + 3D walkthrough | `/#/showcase` |
+| Builder workspace + ROI + demand heatmap | `/#/builder` |
+| Embed preview (fictional builder site) | `/#/embed-demo` |
+| Pricing · Methodology · Founder | `/#/pricing` · `/#/methodology` · `/#/about` |
 | 2-min walkthrough video | _added on submission_ |
 
-The demo tour is the recommended path for first-time reviewers — it
-pre-loads a 4-room sample 3 BHK in Contemporary style with realistic
-Vastu HUD findings and a costed shopping list. Live mode uses
-Cloudflare Workers AI (LLaVA + FLUX-1-schnell) for actual room
-staging from any uploaded photo.
+**Recommended first-look path:** open **Instant Design**, type a sentence
+(e.g. *"Contemporary 3BHK in Bengaluru, ₹8L, Vastu-compliant"*), watch the
+home generate, then click any room to see the priced, swappable
+bill-of-materials. Everything is demo-deterministic — a tiered AI pipeline
+(FLUX-1 → free fallbacks → cached renders) means no screen ever hard-fails.
 
 Hosted on a single DigitalOcean Droplet (Bangalore region, 4 GB / 2 vCPU) running the full Docker Compose stack behind Caddy with auto-issued Let's Encrypt TLS. No managed cloud services in the critical path — everything is reproducible from `docker compose up`.
 
