@@ -32,17 +32,17 @@ bill-of-materials. Everything is demo-deterministic — a tiered AI pipeline
 
 Hosted on a single DigitalOcean Droplet (Bangalore region, 4 GB / 2 vCPU) running the full Docker Compose stack behind Caddy with auto-issued Let's Encrypt TLS. No managed cloud services in the critical path — everything is reproducible from `docker compose up`.
 
-## Test credentials
+## No login required
 
-Builder and buyer flows are demoable **without signing in** (signup forms persist to `localStorage` only — no backend account creation needed for the MVP).
+The MVP is **fully account-less** — there is no sign-in, no test credentials. Every surface is reachable in one click. Builder and buyer state persists to `localStorage`/`sessionStorage` (schema-ready for real accounts post-pilot).
 
-If you want a real authenticated buyer session for the dashboard/Vastu Score features, sign up via Google OAuth on the live URL or use:
-
-| Persona | Path | How to use |
+| Surface | Path | What to do |
 |---|---|---|
-| Builder  | `/#/builder`     | Fill out the signup form (any name/email). Generates a workspace + embed snippet locally. |
-| Buyer    | `/#/design`      | Multi-room journey. Designs Living + Bedroom + Kitchen + Pooja in one consistent style. |
-| Buyer (legacy single shot) | `/#/stage` | One-room AI staging via Cloudflare Workers AI (SD 1.5 img2img). |
+| Builder  | `/#/builder`     | Fill the 30-second form (any name/email) → workspace + embed snippet + ROI + demand heatmap. |
+| Buyer (instant) | `/#/instant` | Type one sentence → full home generates → click any room for the priced, swappable breakdown. |
+| Buyer (multi-room) | `/#/design` | Pick rooms → style → stage each (or "Take the 1-click demo tour"). Ends in a costed summary. |
+| Vastu HUD | `/#/vastu-hud` | Upload a room → compliance markers drawn on the photo, score + fixes, 5-dimension breakdown. |
+| Your A2S | `/#/dashboard` | Account-less hub: your designed home, builder workspace, quick actions. |
 
 ---
 
