@@ -11,6 +11,19 @@
  * that map plausibly to a buyer's real Vastu concerns.
  */
 
+// Per-category sub-scores — ported from the original A2S Vastu audit, which
+// scored 5 dimensions (decor / elements / entry / furniture / light). The
+// category breakdown is the richest part of the old report; rendering it as
+// bars gives the HUD an expert, multi-dimensional feel.
+const CATEGORY_SCORES = {
+    bedroom:     { Entry: 82, Furniture: 70, Light: 80, Elements: 78, Decor: 84 },
+    living_room: { Entry: 88, Furniture: 80, Light: 85, Elements: 76, Decor: 82 },
+    kitchen:     { Entry: 72, Furniture: 68, Light: 74, Elements: 64, Decor: 78 },
+    pooja_room:  { Entry: 95, Furniture: 90, Light: 92, Elements: 94, Decor: 88 },
+    dining_room: { Entry: 78, Furniture: 72, Light: 76, Elements: 70, Decor: 80 },
+    study:       { Entry: 86, Furniture: 88, Light: 82, Elements: 84, Decor: 90 },
+};
+
 const SEED_BANK = {
     bedroom: {
         score: 78, band: 'Good', facing: 'N',
@@ -78,6 +91,7 @@ export const fallbackVastuOverlay = (roomType, facing) => {
         ...seed,
         facing: (facing || seed.facing || 'N').toUpperCase(),
         room_type: key,
+        category_scores: CATEGORY_SCORES[key] || CATEGORY_SCORES.bedroom,
         objects: [],
         largest_window_wall: null,
         _fallback: true,

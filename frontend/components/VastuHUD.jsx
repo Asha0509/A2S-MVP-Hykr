@@ -324,13 +324,36 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
                 )}
             </div>
 
-            {/* Summary + violations list */}
+            {/* Summary + category breakdown + violations list */}
             {overlay && (
                 <div className="space-y-3">
                     {overlay.summary && (
                         <div className="rounded-xl bg-surface border border-premium p-4 flex items-start gap-3">
                             <Sparkles size={16} className="text-accent shrink-0 mt-0.5" />
                             <p className="text-sm text-main leading-relaxed">{overlay.summary}</p>
+                        </div>
+                    )}
+
+                    {overlay.category_scores && (
+                        <div className="rounded-xl bg-surface border border-premium p-4">
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-accent mb-3">
+                                Compliance by dimension
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2.5">
+                                {Object.entries(overlay.category_scores).map(([cat, val]) => {
+                                    const c = val >= 85 ? '#B8763D' : val >= 70 ? '#16a34a' : val >= 50 ? '#f59e0b' : '#dc2626';
+                                    return (
+                                        <div key={cat} className="flex items-center gap-2">
+                                            <span className="text-xs text-muted w-20 shrink-0">{cat}</span>
+                                            <div className="flex-1 h-1.5 rounded-full bg-main overflow-hidden">
+                                                <div className="h-full rounded-full transition-all duration-700"
+                                                     style={{ width: `${val}%`, background: c }} />
+                                            </div>
+                                            <span className="text-xs font-bold tabular-nums w-7 text-right" style={{ color: c }}>{val}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
 
