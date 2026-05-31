@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Upload, Compass, AlertTriangle, ArrowRight, Award } from 'lucide-react';
 import VastuHUD from '../components/VastuHUD';
+import SectionBackdrop from '../components/SectionBackdrop';
 import { analyseVastuOverlay } from '../services/api';
 
 const ROOM_TYPES = [
@@ -70,20 +71,34 @@ const VastuHUDPage = () => {
 
     return (
         <div className="min-h-screen bg-main">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-10">
-                <div className="mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-[0.25em] uppercase mb-3">
+            <SectionBackdrop variant="midnight" minHeight="40vh">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-12">
+                    <div
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-[0.3em] uppercase mb-4"
+                        style={{ color: '#B8763D', background: 'rgba(184,118,61,0.15)', border: '1px solid rgba(184,118,61,0.35)', backdropFilter: 'blur(6px)' }}
+                    >
                         <Compass size={14} />
                         Live Vastu HUD · A2S Exclusive
                     </div>
-                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-main leading-tight font-black italic">
-                        Vastu compliance, <span className="text-accent">drawn on your actual room</span>.
+                    <h1
+                        className="font-serif font-black italic leading-[1.05]"
+                        style={{ fontSize: 'clamp(2.25rem, 5vw, 4.5rem)', color: '#F4EBDD' }}
+                    >
+                        Vastu compliance, <span style={{
+                            background: 'linear-gradient(90deg, #B8763D 0%, #E8C896 50%, #B8763D 100%)',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite',
+                        }}>drawn on your actual room</span>.
                     </h1>
-                    <p className="mt-3 text-sm sm:text-base text-muted max-w-2xl">
-                        Upload your room photo, pick which way it faces. Our AI identifies every object, scores the room against a 100-point
-                        Vastu rule engine, and marks each violation directly on your photo — with the exact fix.
+                    <p className="mt-4 text-sm sm:text-base max-w-2xl leading-relaxed" style={{ color: 'rgba(244,235,221,0.78)' }}>
+                        Upload your room photo, pick which way it faces. Our AI identifies every object, scores the room against a
+                        100-point Vastu rule engine, and marks each violation directly on your photo — with the exact fix.
                     </p>
                 </div>
+                <style>{`@keyframes a2s-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
+            </SectionBackdrop>
+
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16">
 
                 <div className="grid lg:grid-cols-5 gap-6">
                     {/* Controls */}

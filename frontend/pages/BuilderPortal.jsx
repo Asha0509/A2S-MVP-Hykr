@@ -4,6 +4,7 @@ import {
     Building2, CheckCircle2, Copy, Eye, Sparkles, Layers, Users, BarChart3,
     ArrowRight, ExternalLink, RefreshCw, Tag, Save, Calculator, IndianRupee,
 } from 'lucide-react';
+import SectionBackdrop from '../components/SectionBackdrop';
 
 const STORAGE_KEY = 'a2s-builder-account';
 
@@ -115,32 +116,46 @@ const BuilderPortal = () => {
     if (!account) {
         return (
             <div className="min-h-screen bg-main">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-12">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-wide uppercase mb-3">
-                        <Building2 size={14} />
-                        Builder workspace · 30-second setup
-                    </div>
-                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-main leading-tight font-black italic">
-                        Activate the <span className="text-accent">AI design layer</span> on your project page.
-                    </h1>
-                    <p className="mt-4 text-sm sm:text-base text-muted max-w-2xl">
-                        Create a workspace, pick the brands you have deals with, drop the embed snippet on your project landing page.
-                        Your buyers self-serve the design experience — and every catalog click is attributed back to your account.
-                    </p>
+                <SectionBackdrop variant="dark" minHeight="50vh">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-14">
+                        <div
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-[0.3em] uppercase mb-5"
+                            style={{ color: '#B8763D', background: 'rgba(184,118,61,0.15)', border: '1px solid rgba(184,118,61,0.35)', backdropFilter: 'blur(6px)' }}
+                        >
+                            <Building2 size={14} /> Builder workspace · 30-second setup
+                        </div>
+                        <h1 className="font-serif font-black italic leading-[1.05]" style={{ fontSize: 'clamp(2.25rem, 5vw, 4.5rem)', color: '#F4EBDD' }}>
+                            Activate the <span style={{
+                                background: 'linear-gradient(90deg, #B8763D 0%, #E8C896 50%, #B8763D 100%)',
+                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                                backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite',
+                            }}>AI design layer</span> on your project page.
+                        </h1>
+                        <p className="mt-5 text-sm sm:text-base max-w-2xl leading-relaxed" style={{ color: 'rgba(244,235,221,0.78)' }}>
+                            Create a workspace, pick the brands you have deals with, drop the embed snippet on your project landing page.
+                            Your buyers self-serve the design experience — and every catalog click is attributed back to your account.
+                        </p>
 
-                    <div className="mt-7 sm:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {[
-                            { icon: Sparkles, title: 'Live the day you embed', body: 'No integration, no SSO, no DNS. Drop a snippet, your buyers are designing within the hour.' },
-                            { icon: CheckCircle2, title: 'Vastu sells in India', body: 'Real-time Vastu compliance markers on every buyer\'s room photo — a category-defining differentiator.' },
-                            { icon: Layers, title: 'Your brands, surfaced first', body: 'Pick the vendors you have bulk pricing with. Buyers see those SKUs first in every staged room.' },
-                        ].map(({ icon: Icon, title, body }) => (
-                            <div key={title} className="rounded-2xl bg-surface border border-premium p-4">
-                                <Icon size={20} className="text-accent mb-2" />
-                                <p className="font-semibold text-main">{title}</p>
-                                <p className="text-xs text-muted mt-1 leading-snug">{body}</p>
-                            </div>
-                        ))}
+                        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                                { icon: Sparkles, title: 'Live the day you embed', body: 'No integration, no SSO, no DNS. Drop a snippet, your buyers are designing within the hour.' },
+                                { icon: CheckCircle2, title: 'Vastu sells in India', body: 'Real-time Vastu compliance markers on every buyer\'s room photo — a category-defining differentiator.' },
+                                { icon: Layers, title: 'Your brands, surfaced first', body: 'Pick the vendors you have bulk pricing with. Buyers see those SKUs first in every staged room.' },
+                            ].map(({ icon: Icon, title, body }) => (
+                                <div key={title} className="rounded-2xl p-4" style={{
+                                    background: 'rgba(244,235,221,0.04)', border: '1px solid rgba(244,235,221,0.10)', backdropFilter: 'blur(8px)',
+                                }}>
+                                    <Icon size={20} style={{ color: '#B8763D' }} className="mb-2" />
+                                    <p className="font-semibold" style={{ color: '#F4EBDD' }}>{title}</p>
+                                    <p className="text-xs mt-1 leading-snug" style={{ color: 'rgba(244,235,221,0.6)' }}>{body}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
+                    <style>{`@keyframes a2s-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
+                </SectionBackdrop>
+
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 pb-16 relative" style={{ zIndex: 2 }}>
 
                     <form onSubmit={handleCreate} className="mt-10 rounded-2xl bg-surface border border-premium p-6 space-y-5">
                         <div>
