@@ -57,6 +57,44 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
     const [imgEl, setImgEl] = useState(null);
     const [dimensions, setDimensions] = useState({ w: 0, h: 0 });
     const [resizeTick, setResizeTick] = useState(0);
+    // Interactive "apply fix": resolved violation indices + animated score.
+    const [resolved, setResolved] = useState(() => new Set());
+    const [displayScore, setDisplayScore] = useState(null);
+    const scoreRafRef = useRef(0);
+
+    const baseScore = overlay?.score ?? null;
+
+    // Reset interactive state whenever a new analysis arrives.
+    useEffect(() => {
+        setResolved(new Set());
+        setDisplayScore(baseScore);
+    }, [baseScore, overlay?.room_type, overlay?.facing]);
+
+    // Per-violation score uplift weighted by severity.
+    const fixDelta = (sev) => (sev === 'high' ? 8 : sev === 'medium' ? 5 : 3);
+
+    const animateScoreTo = (toVal) => {
+        cancelAnimationFrame(scoreRafRef.current);
+        const from = displayScore ?? baseScore ?? 0;
+        const start = performance.now();
+        const dur = 700;
+        const tick = (now) => {
+            const p = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - p, 3);
+            setDisplayScore(Math.round(from + (toVal - from) * eased));
+            if (p < 1) scoreRafRef.current = requestAnimationFrame(tick);
+        };
+        scoreRafRef.current = requestAnimationFrame(tick);
+    };
+
+    const applyFix = (idx, sev) => {
+        if (resolved.has(idx)) return;
+        const next = new Set(resolved);
+        next.add(idx);
+        setResolved(next);
+        const target = Math.min(100, (displayScore ?? baseScore ?? 0) + fixDelta(sev));
+        animateScoreTo(target);
+    };
 
     useEffect(() => {
         if (!imageSrc) return;
@@ -109,7 +147,10 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
             const z = ZONE_COORDS[zoneKey] || ZONE_COORDS.centre;
             const cx = z.x * w;
             const cy = z.y * h;
-            const color = SEVERITY_COLOR[v.severity] || SEVERITY_COLOR.medium;
+            const isResolved = resolved.has(i);
+            const color = isResolved
+                ? { fill: '#16a34a', stroke: '#14532d', glow: 'rgba(22,163,74,0.45)' }
+                : (SEVERITY_COLOR[v.severity] || SEVERITY_COLOR.medium);
 
             // glow
             ctx.beginPath();
@@ -126,15 +167,20 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
             ctx.fill();
             ctx.stroke();
 
-            // pin number
+            // pin glyph — checkmark when resolved, else number
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 16px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(String(i + 1), cx, cy);
+            if (isResolved) {
+                ctx.font = 'bold 18px Inter, sans-serif';
+                ctx.fillText('✓', cx, cy + 1);
+            } else {
+                ctx.font = 'bold 16px Inter, sans-serif';
+                ctx.fillText(String(i + 1), cx, cy);
+            }
 
-            // direction hint arrow (if present)
-            if (v.direction_hint && DIRECTION_ANGLE[v.direction_hint] != null) {
+            // direction hint arrow — only while unresolved
+            if (!isResolved && v.direction_hint && DIRECTION_ANGLE[v.direction_hint] != null) {
                 const angle = (DIRECTION_ANGLE[v.direction_hint] - 90) * (Math.PI / 180);
                 const ax = cx + Math.cos(angle) * 50;
                 const ay = cy + Math.sin(angle) * 50;
@@ -166,7 +212,7 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
 
         // 3. compass top-right
         drawCompass(ctx, w - 70, 70, overlay.facing || 'N');
-    }, [imgEl, overlay, dimensions.w, resizeTick]);
+    }, [imgEl, overlay, dimensions.w, resizeTick, resolved]);
 
     const drawCompass = (ctx, cx, cy, facing) => {
         const radius = 40;
@@ -211,18 +257,30 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
     };
 
     const violations = overlay?.violations || [];
-    const score = overlay?.score ?? null;
-    const band = overlay?.band || '';
+    const liveScore = displayScore ?? overlay?.score ?? null;
+    // Band recomputes as the score animates up so the colour upgrades live.
+    const bandFor = (s) => {
+        if (s == null) return '';
+        if (s < 50) return 'Poor';
+        if (s < 70) return 'Needs Work';
+        if (s < 85) return 'Good';
+        return 'Excellent Vastu';
+    };
+    const liveBand = liveScore != null ? bandFor(liveScore) : (overlay?.band || '');
+    const allResolved = violations.length > 0 && resolved.size === violations.length;
 
-    const ScoreBadge = useMemo(() => () => (
+    const ScoreBadge = () => (
         <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-white font-semibold text-xs shadow-md"
-            style={{ backgroundColor: bandColor(band) }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-white font-semibold text-xs shadow-md transition-colors duration-500"
+            style={{ backgroundColor: bandColor(liveBand) }}
         >
             <Award size={13} />
-            Vastu {score ?? '—'} · {band || 'Analysing…'}
+            Vastu {liveScore ?? '—'} · {liveBand || 'Analysing…'}
+            {resolved.size > 0 && (
+                <span className="ml-1 text-[10px] opacity-90">▲ +{(liveScore ?? 0) - (overlay?.score ?? 0)}</span>
+            )}
         </div>
-    ), [score, band]);
+    );
 
     return (
         <div className="space-y-4">
@@ -276,50 +334,64 @@ const VastuHUD = ({ imageSrc, overlay, loading, onChangeFacing }) => {
                         </div>
                     )}
 
+                    {allResolved && (
+                        <div className="rounded-xl border p-3 flex items-center gap-2 text-sm font-semibold"
+                             style={{ background: 'rgba(22,163,74,0.1)', borderColor: 'rgba(22,163,74,0.4)', color: '#16a34a' }}>
+                            <Award size={16} /> All fixes applied — this room is now {liveBand}. Score {liveScore}/100.
+                        </div>
+                    )}
                     {violations.length > 0 && (
                         <div className="space-y-2">
                             {violations.map((v, i) => {
-                                const color = SEVERITY_COLOR[v.severity] || SEVERITY_COLOR.medium;
-                                const expanded = hoveredViolation === i;
+                                const isResolved = resolved.has(i);
+                                const color = isResolved
+                                    ? { fill: '#16a34a' }
+                                    : (SEVERITY_COLOR[v.severity] || SEVERITY_COLOR.medium);
                                 return (
-                                    <button
+                                    <div
                                         key={i}
-                                        onMouseEnter={() => setHoveredViolation(i)}
-                                        onMouseLeave={() => setHoveredViolation(null)}
-                                        onClick={() => setHoveredViolation(expanded ? null : i)}
-                                        className="w-full text-left rounded-xl bg-surface border border-premium p-3 hover:border-accent transition flex items-start gap-3"
+                                        className="w-full text-left rounded-xl bg-surface border p-3 transition flex items-start gap-3"
+                                        style={{ borderColor: isResolved ? 'rgba(22,163,74,0.4)' : undefined, opacity: isResolved ? 0.85 : 1 }}
                                     >
                                         <span
                                             className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
                                             style={{ backgroundColor: color.fill }}
                                         >
-                                            {i + 1}
+                                            {isResolved ? '✓' : i + 1}
                                         </span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: color.fill }}>
-                                                    {v.severity}
+                                                    {isResolved ? 'resolved' : v.severity}
                                                 </span>
                                                 <span className="text-xs text-muted">·</span>
                                                 <span className="text-xs text-muted">{v.zone}</span>
-                                                {v.direction_hint && (
+                                                {v.direction_hint && !isResolved && (
                                                     <>
                                                         <span className="text-xs text-muted">·</span>
                                                         <span className="text-xs text-accent font-semibold">{v.direction_hint}</span>
                                                     </>
                                                 )}
                                             </div>
-                                            <p className="font-semibold text-main text-sm mt-0.5">{v.issue}</p>
+                                            <p className="font-semibold text-main text-sm mt-0.5" style={{ textDecoration: isResolved ? 'line-through' : 'none' }}>
+                                                {v.issue}
+                                            </p>
                                             <p className="text-xs text-muted mt-1 leading-relaxed">
                                                 <span className="text-accent font-semibold">Fix:</span> {v.fix}
                                             </p>
                                         </div>
-                                        <ChevronRight
-                                            size={16}
-                                            className="text-muted shrink-0 mt-1 transition"
-                                            style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                                        />
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => applyFix(i, v.severity)}
+                                            disabled={isResolved}
+                                            className="shrink-0 self-center rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition"
+                                            style={isResolved
+                                                ? { background: 'rgba(22,163,74,0.15)', color: '#16a34a', cursor: 'default' }
+                                                : { background: 'var(--accent)', color: '#fff' }}
+                                        >
+                                            {isResolved ? 'Fixed ✓' : `Apply fix +${fixDelta(v.severity)}`}
+                                        </button>
+                                    </div>
                                 );
                             })}
                         </div>

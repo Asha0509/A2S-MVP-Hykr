@@ -102,6 +102,51 @@ const inferBundle = (text) => {
 
 const fmt = (n) => `₹${(n / 100000).toFixed(2)}L`;
 
+// Token classes the "parser" recognises. Each maps to a highlight colour so
+// the user watches their sentence get understood as they type.
+const TOKEN_RULES = [
+    { re: /\b(contemporary|modern|minimal|japandi|classic|ethnic|scandi|traditional|functional)\b/gi, color: '#B8763D' },          // style
+    { re: /\b(\d\s?bhk|studio|villa|duplex|penthouse)\b/gi,                                            color: '#5BA3B8' },          // unit type
+    { re: /\b(mumbai|bengaluru|bangalore|pune|hyderabad|chennai|delhi|kolkata|ahmedabad|noida|gurgaon)\b/gi, color: '#7FB069' },    // city
+    { re: /(₹\s?\d+(?:\.\d+)?\s?(?:l|lakh|lakhs|cr|crore)?|\d+\s?(?:l|lakh|lakhs|cr|crore)\b)/gi,        color: '#E8C896' },          // budget
+    { re: /\b(vastu|vastu-compliant|vaastu|north-facing|east-facing|pooja)\b/gi,                        color: '#D98880' },          // vastu
+];
+
+// Returns an array of React spans with recognised tokens coloured.
+const highlightPrompt = (text) => {
+    if (!text) return null;
+    // Build a list of [start, end, color] matches, then stitch the string.
+    const marks = [];
+    TOKEN_RULES.forEach(({ re, color }) => {
+        let m;
+        re.lastIndex = 0;
+        while ((m = re.exec(text)) !== null) {
+            marks.push({ start: m.index, end: m.index + m[0].length, color });
+            if (m.index === re.lastIndex) re.lastIndex++;
+        }
+    });
+    marks.sort((a, b) => a.start - b.start);
+    // Drop overlaps (keep first match)
+    const clean = [];
+    let cursor = 0;
+    for (const mk of marks) {
+        if (mk.start >= cursor) { clean.push(mk); cursor = mk.end; }
+    }
+    const out = [];
+    let i = 0;
+    clean.forEach((mk, idx) => {
+        if (mk.start > i) out.push(<span key={`p${idx}`} style={{ color: '#F4EBDD' }}>{text.slice(i, mk.start)}</span>);
+        out.push(
+            <span key={`h${idx}`} style={{ color: mk.color, fontWeight: 700, textShadow: `0 0 12px ${mk.color}66` }}>
+                {text.slice(mk.start, mk.end)}
+            </span>
+        );
+        i = mk.end;
+    });
+    if (i < text.length) out.push(<span key="end" style={{ color: '#F4EBDD' }}>{text.slice(i)}</span>);
+    return out;
+};
+
 const InstantDesign = () => {
     const [prompt, setPrompt] = useState('');
     const [running, setRunning] = useState(false);
@@ -162,15 +207,26 @@ const InstantDesign = () => {
                           style={{ background: 'rgba(244,235,221,0.06)', border: '1px solid rgba(244,235,221,0.15)', backdropFilter: 'blur(10px)' }}>
                         <div className="flex flex-col sm:flex-row gap-2">
                             <div className="flex-1 relative">
-                                <Sparkles size={16} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50" style={{ color: '#B8763D' }} />
+                                <Sparkles size={16} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50 z-10" style={{ color: '#B8763D' }} />
+                                {/* Highlight overlay sits under the (transparent-text) input so
+                                    recognised tokens glow gold as the user types. */}
+                                <div
+                                    aria-hidden="true"
+                                    className="absolute inset-0 rounded-xl pl-11 pr-4 py-4 text-base whitespace-pre-wrap break-words overflow-hidden pointer-events-none"
+                                    style={{ fontFamily: 'inherit', lineHeight: '1.5' }}
+                                >
+                                    {prompt
+                                        ? highlightPrompt(prompt)
+                                        : <span style={{ color: 'rgba(244,235,221,0.35)' }}>Contemporary 3BHK in Bengaluru, ₹8L budget, Vastu-compliant…</span>}
+                                </div>
                                 <input
                                     type="text"
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
-                                    placeholder="Contemporary 3BHK in Bengaluru, ₹8L budget, Vastu-compliant…"
+                                    placeholder=""
                                     disabled={running}
-                                    className="w-full rounded-xl pl-11 pr-4 py-4 text-base focus:outline-none disabled:opacity-60"
-                                    style={{ background: 'rgba(15,27,34,0.6)', border: '1px solid rgba(244,235,221,0.10)', color: '#F4EBDD' }}
+                                    className="relative w-full rounded-xl pl-11 pr-4 py-4 text-base focus:outline-none disabled:opacity-60"
+                                    style={{ background: 'rgba(15,27,34,0.6)', border: '1px solid rgba(244,235,221,0.10)', color: 'transparent', caretColor: '#F4EBDD', lineHeight: '1.5' }}
                                 />
                             </div>
                             <button

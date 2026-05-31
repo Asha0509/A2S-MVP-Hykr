@@ -17,6 +17,26 @@ import {
 
 const STORAGE_KEY = 'a2s-design-journey';
 
+// Animated counter — ticks from 0 to `target` over `duration` ms with
+// ease-out cubic. Returns the live value for the caller to format.
+const useCountUp = (target, duration = 1800) => {
+    const [value, setValue] = React.useState(0);
+    React.useEffect(() => {
+        if (!target || target <= 0) { setValue(0); return; }
+        const start = performance.now();
+        let raf = 0;
+        const tick = (now) => {
+            const p = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - p, 3);
+            setValue(Math.round(target * eased));
+            if (p < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [target, duration]);
+    return value;
+};
+
 const formatCurrency = (value) => {
     const n = Number(value) || 0;
     if (n >= 100000) {
@@ -268,6 +288,24 @@ const RoomCard = ({ room }) => {
     );
 };
 
+const AnimatedTotal = ({ total }) => {
+    const v = useCountUp(total, 1800);
+    return (
+        <p className="mt-4 flex items-baseline gap-2">
+            <IndianRupee size={24} aria-hidden="true" className="text-accent sm:hidden" />
+            <IndianRupee size={28} aria-hidden="true" className="text-accent hidden sm:inline-block" />
+            <span className="font-serif text-3xl sm:text-4xl text-main md:text-5xl tabular-nums">
+                {formatCurrency(v).replace('₹', '')}
+            </span>
+        </p>
+    );
+};
+
+const AnimatedEmi = ({ emi }) => {
+    const v = useCountUp(emi, 1800);
+    return <span className="font-semibold text-accent tabular-nums">{formatCurrency(v)}</span>;
+};
+
 const DesignSummary = () => {
     const navigate = useNavigate();
     const [journey, setJourney] = useState(null);
@@ -409,27 +447,9 @@ const DesignSummary = () => {
                             <p className="mt-1 text-sm text-muted">
                                 Estimated furniture and finishes across all rooms.
                             </p>
-                            <p className="mt-4 flex items-baseline gap-2">
-                                <IndianRupee
-                                    size={24}
-                                    aria-hidden="true"
-                                    className="text-accent sm:hidden"
-                                />
-                                <IndianRupee
-                                    size={28}
-                                    aria-hidden="true"
-                                    className="text-accent hidden sm:inline-block"
-                                />
-                                <span className="font-serif text-3xl sm:text-4xl text-main md:text-5xl">
-                                    {formatCurrency(rollup.total).replace('₹', '')}
-                                </span>
-                            </p>
+                            <AnimatedTotal total={rollup.total} emi={rollup.emi} />
                             <p className="mt-2 text-sm text-muted">
-                                EMI from{' '}
-                                <span className="font-semibold text-accent">
-                                    {formatCurrency(rollup.emi)}
-                                </span>
-                                /month for 36 months
+                                EMI from <AnimatedEmi emi={rollup.emi} />/month for 36 months
                             </p>
                         </div>
 
