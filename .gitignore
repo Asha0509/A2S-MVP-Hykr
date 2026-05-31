@@ -63,3 +63,8 @@ AGENTS.md
 records/
 prompt.md
 overview.txt
+
+# Local tooling artifacts
+tools/screenshots/
+tools/node_modules/
+tools/.libs/
