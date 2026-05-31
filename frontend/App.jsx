@@ -111,10 +111,11 @@ const useEmbedMode = () => {
     return embedParam || inIframe;
 };
 
-// Buyer-experience routes where standalone usage = a "preview" of what a
-// builder would embed. Marketing/B2B routes (/, /builder, /pricing, etc.)
-// are NOT preview surfaces, so they're excluded.
-const PREVIEW_ROUTES = new Set(['/instant', '/design', '/design/summary', '/vastu-hud', '/showcase', '/dashboard']);
+// Routes where standalone usage = a "preview" of what a builder embeds.
+// Lead with the Home landing (entry point — sets the B2B2C context up front),
+// plus the active buyer-experience surfaces. The personal "Your A2S"
+// dashboard is excluded (it's an account hub, not a preview surface).
+const PREVIEW_ROUTES = new Set(['/', '/instant', '/design', '/design/summary', '/vastu-hud', '/showcase']);
 
 // Thin strip clarifying that standalone consumer usage is a preview of the
 // builder-embedded product — not a contradiction of the B2B model. Hidden
