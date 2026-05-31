@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { stageRoom, stageFromPrompt, getSampleBundle, analyseVastuScore, analyseVastuOverlay } from '../services/api';
 import VastuHUD from '../components/VastuHUD';
+import SectionBackdrop from '../components/SectionBackdrop';
 import { DEMO_JOURNEY_PAYLOAD } from '../data/demoJourney';
 
 const SESSION_KEY = 'a2s-design-journey';
@@ -429,37 +430,38 @@ const DesignJourney = () => {
     // ────────────────────────────────────────────
     // Render
     // ────────────────────────────────────────────
+    const cinemaHeading = (() => {
+        if (step === 'mode')        return [<>How do you want to <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">start?</span></>, null];
+        if (step === 'rooms')       return [<>Which rooms shall we <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">design today?</span></>, null];
+        if (step === 'style')       return [<>One <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">style</span>, every room.</>, null];
+        if (step === 'design' && currentRoom) return [<>Designing <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">{currentRoom.label}</span></>, `Room ${currentIdx + 1} of ${orderedRooms.length}`];
+        if (step === 'plan')        return [<>Pick your <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">floor plan</span></>, null];
+        if (step === 'plan-style')  return [<>One <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">style</span> for your future home.</>, null];
+        if (step === 'plan-stage')  return [<>Staging your <span style={{ background: 'linear-gradient(90deg,#B8763D,#E8C896,#B8763D)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite' }} key="x">{planProgress.label || 'home'}</span></>, `Room ${planProgress.current} of ${planProgress.total} — no photos needed`];
+        return [null, null];
+    })();
+
     return (
         <div className="min-h-screen bg-main">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-10">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-wide uppercase mb-3">
+            <SectionBackdrop variant="dark" minHeight="35vh">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-10">
+                    <div
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-[0.3em] uppercase mb-5"
+                        style={{ color: '#B8763D', background: 'rgba(184,118,61,0.15)', border: '1px solid rgba(184,118,61,0.35)', backdropFilter: 'blur(6px)' }}
+                    >
                         <Layers size={14} />
-                        Build Your Home {builderName ? `· for ${builderName}` : ''}
+                        Build Your Home{builderName ? ` · for ${builderName}` : ''}
                     </div>
-                    <h1 className="font-serif text-2xl sm:text-5xl text-main leading-tight font-black italic">
-                        {step === 'mode' && <>How do you want to <span className="text-accent">start?</span></>}
-                        {step === 'rooms' && <>Which rooms shall we <span className="text-accent">design today?</span></>}
-                        {step === 'style' && <>One <span className="text-accent">style</span>, every room.</>}
-                        {step === 'design' && currentRoom && (
-                            <>Designing <span className="text-accent">{currentRoom.label}</span>
-                                <span className="text-base text-muted font-sans not-italic font-normal block mt-2">
-                                    Room {currentIdx + 1} of {orderedRooms.length}
-                                </span>
-                            </>
-                        )}
-                        {step === 'plan' && <>Pick your <span className="text-accent">floor plan</span></>}
-                        {step === 'plan-style' && <>One <span className="text-accent">style</span> for your future home.</>}
-                        {step === 'plan-stage' && (
-                            <>Staging your <span className="text-accent">{planProgress.label || 'home'}</span>
-                                <span className="text-base text-muted font-sans not-italic font-normal block mt-2">
-                                    Room {planProgress.current} of {planProgress.total} — no photos needed
-                                </span>
-                            </>
-                        )}
+                    <h1 className="font-serif font-black italic leading-[1.05]" style={{ fontSize: 'clamp(2rem, 4.5vw, 4rem)', color: '#F4EBDD' }}>
+                        {cinemaHeading[0]}
                     </h1>
+                    {cinemaHeading[1] && (
+                        <p className="text-sm font-sans mt-3" style={{ color: 'rgba(244,235,221,0.7)' }}>{cinemaHeading[1]}</p>
+                    )}
                 </div>
+                <style>{`@keyframes a2s-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
+            </SectionBackdrop>
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
 
                 {/* Stepper — different rail for photo vs floor-plan flow. Hidden on mode select. */}
                 {step !== 'mode' && (
