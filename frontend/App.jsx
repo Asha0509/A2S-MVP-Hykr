@@ -21,6 +21,7 @@ const DesignJourney = lazy(() => import('./pages/DesignJourney'));
 const DesignSummary = lazy(() => import('./pages/DesignSummary'));
 const VastuHUDPage = lazy(() => import('./pages/VastuHUDPage'));
 const Showcase = lazy(() => import('./pages/Showcase'));
+const InstantDesign = lazy(() => import('./pages/InstantDesign'));
 const About = lazy(() => import('./pages/About'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Waitlist = lazy(() => import('./pages/Waitlist'));
@@ -91,7 +92,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // The floating AI consultant chatbot is a consumer-flow feature; hide it on
 // the HyKr B2B surfaces (landing, builder portal, embed demo, buyer journey)
 // so the demo doesn't look like a 2018 marketplace chat bot.
-const HIDE_STYLIST_ON = new Set(['/', '/login', '/builder', '/embed-demo', '/design', '/design/summary', '/vastu-hud', '/showcase', '/about', '/pricing', '/methodology']);
+const HIDE_STYLIST_ON = new Set(['/', '/login', '/builder', '/embed-demo', '/design', '/design/summary', '/vastu-hud', '/showcase', '/about', '/pricing', '/methodology', '/instant']);
 const ConditionalStylistWidget = () => {
     const { pathname } = useLocation();
     if (HIDE_STYLIST_ON.has(pathname)) return null;
@@ -159,6 +160,7 @@ const Shell = () => {
                                 <Route path="/design/summary" element={<DesignSummary />} />
                                 <Route path="/design" element={<DesignJourney />} />
                                 <Route path="/vastu-hud" element={<VastuHUDPage />} />
+                                <Route path="/instant" element={<InstantDesign />} />
                                 <Route path="/showcase" element={<Showcase />} />
                                 <Route path="/about" element={<About />} />
                                 <Route path="/pricing" element={<Pricing />} />

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, X, ArrowRight, Sparkles, Image as ImageIcon, Compass } from 'lucide-react';
+import { Award, X, ArrowRight, Sparkles, Image as ImageIcon, Compass, Move3D } from 'lucide-react';
 import VastuHUD from '../components/VastuHUD';
+import Walkthrough3D from '../components/Walkthrough3D';
 
 /**
  * Showcase — hand-curated before/after gallery.
@@ -323,7 +324,7 @@ const ScoreBadge = ({ score, band }) => {
 /* Card                                                                */
 /* ------------------------------------------------------------------ */
 
-const ShowcaseCard = ({ item, onExpand }) => {
+const ShowcaseCard = ({ item, onExpand, onWalkthrough }) => {
     const [showAfter, setShowAfter] = useState(true);
     return (
         <article className="rounded-3xl overflow-hidden bg-surface border border-premium shadow-premium flex flex-col">
@@ -357,17 +358,27 @@ const ShowcaseCard = ({ item, onExpand }) => {
                 <div className="absolute top-3 right-3">
                     <ScoreBadge score={item.score} band={item.band} />
                 </div>
-                {/* HUD chip */}
-                {item.hud && (
+                {/* Action chips bottom */}
+                <div className="absolute bottom-3 right-3 inline-flex items-center gap-2">
+                    {item.hud && (
+                        <button
+                            type="button"
+                            onClick={() => onExpand(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg"
+                            style={{ backgroundColor: 'var(--accent)' }}
+                        >
+                            <Compass size={12} /> HUD
+                        </button>
+                    )}
                     <button
                         type="button"
-                        onClick={() => onExpand(item)}
-                        className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg"
-                        style={{ backgroundColor: 'var(--accent)' }}
+                        onClick={() => onWalkthrough && onWalkthrough(item)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg"
+                        style={{ background: 'linear-gradient(135deg, #B8763D, #8E5A2D)', color: '#0F1B22' }}
                     >
-                        <Compass size={12} /> Open HUD
+                        <Move3D size={12} /> Walk in 3D
                     </button>
-                )}
+                </div>
             </div>
 
             {/* Meta */}
@@ -440,6 +451,7 @@ const HudModal = ({ item, onClose }) => {
 
 const Showcase = () => {
     const [expanded, setExpanded] = useState(null);
+    const [walkthroughItem, setWalkthroughItem] = useState(null);
     const cards = useMemo(() => SHOWCASE, []);
 
     return (
@@ -465,10 +477,18 @@ const Showcase = () => {
             <section className="px-6 sm:px-10 lg:px-16 py-12">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                     {cards.map((item) => (
-                        <ShowcaseCard key={item.id} item={item} onExpand={setExpanded} />
+                        <ShowcaseCard key={item.id} item={item} onExpand={setExpanded} onWalkthrough={setWalkthroughItem} />
                     ))}
                 </div>
             </section>
+
+            {walkthroughItem && (
+                <Walkthrough3D
+                    imageSrc={walkthroughItem.after}
+                    label={`${walkthroughItem.label} · ${walkthroughItem.style}`}
+                    onClose={() => setWalkthroughItem(null)}
+                />
+            )}
 
             {/* Bottom CTA */}
             <section className="px-6 sm:px-10 lg:px-16 pb-20">
