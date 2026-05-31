@@ -5,6 +5,7 @@ import {
     IndianRupee, Wand2, Tag,
 } from 'lucide-react';
 import CinematicHero from '../components/CinematicHero';
+import WaitlistCTA from '../components/WaitlistCTA';
 
 const Stat = ({ value, label, sub }) => (
     <div>
@@ -179,11 +180,16 @@ const Home = () => {
 
             {/* Stat strip — sits between cinematic hero and the journey frames */}
             <section className="bg-surface border-b border-premium">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
-                    <Stat value="9"   label="Vendor brands" sub="IKEA · HomeLane · Pepperfry +6" />
-                    <Stat value="6"   label="Design styles" sub="Modern → Ethnic" />
-                    <Stat value="4"   label="Rooms in flow" sub="Living · Bedroom · Kitchen · Pooja" />
-                    <Stat value="100" label="Vastu points"  sub="Auto-scored, on the photo" />
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.35em] text-accent mb-4 text-center">
+                        Pre-launch traction · 18 months of consumer-side validation
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+                        <Stat value="7,200+" label="Waitlist signups"  sub="Indian homebuyers, 18 months" />
+                        <Stat value="38%"    label="Beta-ready"        sub="2,750 ready-to-use buyers" />
+                        <Stat value="1,230"  label="Catalog SKUs"      sub="9 vendor brands, live prices" />
+                        <Stat value="100"    label="Vastu points"      sub="Auto-scored, on the photo" />
+                    </div>
                 </div>
             </section>
 
@@ -314,22 +320,21 @@ const Home = () => {
 
             {/* Closing CTA strip */}
             <section className="bg-surface border-t border-premium">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 grid md:grid-cols-2 gap-6">
                     <div>
-                        <h3 className="font-serif text-xl sm:text-3xl text-main font-black italic leading-tight">
-                            One embed. <span className="text-accent">Every buyer designs their own home.</span>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">For homebuyers</p>
+                        <h3 className="font-serif text-xl sm:text-2xl text-main font-black italic leading-tight mb-3">
+                            Join the <span className="text-accent">7,200</span> already on the waitlist.
                         </h3>
-                        <p className="text-sm text-muted mt-2 max-w-2xl">
-                            Built in India for the Indian housing market. The full stack — buyer journey, Vastu HUD, AI staging, builder dashboard — runs from a single open-source repo.
-                        </p>
+                        <WaitlistCTA variant="buyer" />
                     </div>
-                    <Link
-                        to="/builder"
-                        style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold hover:opacity-90 shrink-0"
-                    >
-                        Start a builder workspace <ArrowRight size={15} />
-                    </Link>
+                    <div>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.35em] text-accent mb-3">For builders</p>
+                        <h3 className="font-serif text-xl sm:text-2xl text-main font-black italic leading-tight mb-3">
+                            <span className="text-accent">3 pilot slots</span> open for Q3 2026.
+                        </h3>
+                        <WaitlistCTA variant="builder" />
+                    </div>
                 </div>
             </section>
         </div>
