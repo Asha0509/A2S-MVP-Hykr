@@ -203,13 +203,15 @@ const AFTER_STUDY = svgDataUri(`
 /* Card data                                                           */
 /* ------------------------------------------------------------------ */
 
+// Real cached FLUX renders (Pollinations.ai · FLUX backend).
+// Generated 2026-05-31 at seed=42 for reproducibility.
 const SHOWCASE = [
     {
         id: 'living',
         label: 'Mumbai 2BHK Living Room',
         style: 'Contemporary',
-        before: BEFORE_LIVING,
-        after: AFTER_LIVING,
+        before: '/showcase/empty-living.jpg',
+        after:  '/showcase/living-modern.jpg',
         score: 78,
         band: 'Good',
         caption: 'Added contemporary sofa, twin sconces, brass tripod lamp and a fiddle-leaf fig.',
@@ -227,9 +229,9 @@ const SHOWCASE = [
     {
         id: 'bedroom',
         label: 'Bengaluru 3BHK Master Bedroom',
-        style: 'Modern',
-        before: BEFORE_BEDROOM,
-        after: AFTER_BEDROOM,
+        style: 'Contemporary',
+        before: '/showcase/empty-bedroom.jpg',
+        after:  '/showcase/bedroom-contemporary.jpg',
         score: 84,
         band: 'Good',
         caption: 'King storage bed with dresser, brass arc lamp and layered curtains for soft south light.',
@@ -239,8 +241,8 @@ const SHOWCASE = [
         id: 'kitchen',
         label: 'Pune 2BHK Kitchen',
         style: 'Functional',
-        before: BEFORE_KITCHEN,
-        after: AFTER_KITCHEN,
+        before: '/showcase/empty-kitchen.jpg',
+        after:  '/showcase/kitchen-functional.jpg',
         score: 71,
         band: 'Good',
         caption: 'Modular base + wall units, built-in hob, chimney and under-cabinet LED strips.',
@@ -259,9 +261,9 @@ const SHOWCASE = [
     {
         id: 'pooja',
         label: 'Hyderabad Pooja Room',
-        style: 'Ethnic',
-        before: BEFORE_POOJA,
-        after: AFTER_POOJA,
+        style: 'Classic',
+        before: '/showcase/empty-pooja.jpg',
+        after:  '/showcase/pooja-classic.jpg',
         score: 92,
         band: 'Excellent Vastu',
         caption: 'Marble mandir in NE niche with brass diyas, silk sitting rug and 2700K pendant.',
@@ -271,8 +273,8 @@ const SHOWCASE = [
         id: 'drawing',
         label: 'Delhi 4BHK Drawing Room',
         style: 'Classic',
-        before: BEFORE_DRAWING,
-        after: AFTER_DRAWING,
+        before: '/showcase/empty-living.jpg',
+        after:  '/showcase/drawing-classic.jpg',
         score: 65,
         band: 'Needs Work',
         caption: 'Chesterfield sofa, brass-trim coffee table, lily centrepiece and a tall reading lamp.',
@@ -282,8 +284,8 @@ const SHOWCASE = [
         id: 'study',
         label: 'Chennai 3BHK Study',
         style: 'Minimal',
-        before: BEFORE_STUDY,
-        after: AFTER_STUDY,
+        before: '/showcase/empty-bedroom.jpg',
+        after:  '/showcase/study-minimal.jpg',
         score: 88,
         band: 'Good',
         caption: 'Wall-to-wall bookcase, slim oak desk, monitor arm and a low task chair.',
