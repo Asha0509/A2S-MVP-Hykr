@@ -91,11 +91,23 @@ import ProtectedRoute from './components/ProtectedRoute';
 // The floating AI consultant chatbot is a consumer-flow feature; hide it on
 // the HyKr B2B surfaces (landing, builder portal, embed demo, buyer journey)
 // so the demo doesn't look like a 2018 marketplace chat bot.
-const HIDE_STYLIST_ON = new Set(['/', '/login', '/builder', '/embed-demo', '/design', '/design/summary', '/vastu-hud', '/showcase', '/about', '/pricing']);
+const HIDE_STYLIST_ON = new Set(['/', '/login', '/builder', '/embed-demo', '/design', '/design/summary', '/vastu-hud', '/showcase', '/about', '/pricing', '/methodology']);
 const ConditionalStylistWidget = () => {
     const { pathname } = useLocation();
     if (HIDE_STYLIST_ON.has(pathname)) return null;
     return <AIStylistWidget />;
+};
+
+// Strip navbar + footer when running inside an iframe OR with ?embed=true.
+// Detects iframe via window.top comparison (catches builder embeds), and
+// honours an explicit query param for direct demo links.
+const useEmbedMode = () => {
+    const { search } = useLocation();
+    const params = new URLSearchParams(search || (typeof window !== 'undefined' ? window.location.search : ''));
+    const embedParam = params.get('embed') === 'true';
+    let inIframe = false;
+    try { inIframe = typeof window !== 'undefined' && window.self !== window.top; } catch (_) { inIframe = true; }
+    return embedParam || inIframe;
 };
 
 // Branded loading fallback for Suspense
@@ -116,11 +128,21 @@ const App = () => {
                 <ScrollToTop />
                 <BuilderAttributionBootstrap />
                 <OAuthTokenBootstrap />
-                <div className="flex flex-col min-h-screen">
-                    <Navbar />
-                    <main className="flex-grow">
-                        <Suspense fallback={<PageLoader />}>
-                            <Routes>
+                <Shell />
+            </Router>
+        </ErrorBoundary>
+    );
+};
+
+// Inner Shell uses useLocation, so it must live inside <Router>.
+const Shell = () => {
+    const embed = useEmbedMode();
+    return (
+        <div className="flex flex-col min-h-screen">
+            {!embed && <Navbar />}
+            <main className="flex-grow">
+                <Suspense fallback={<PageLoader />}>
+                    <Routes>
                                 <Route path="/" element={<Home />} />
                                 <Route path="/login" element={<Login />} />
                                 
@@ -145,15 +167,13 @@ const App = () => {
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                                 <Route path="/terms-of-service" element={<TermsOfService />} />
                                 
-                                <Route path="*" element={<NotFound />} />
-                            </Routes>
-                        </Suspense>
-                    </main>
-                    <Footer />
-                    <ConditionalStylistWidget />
-                </div>
-            </Router>
-        </ErrorBoundary>
+                        <Route path="*" element={<NotFound />} />
+                    </Routes>
+                </Suspense>
+            </main>
+            {!embed && <Footer />}
+            {!embed && <ConditionalStylistWidget />}
+        </div>
     );
 };
 
