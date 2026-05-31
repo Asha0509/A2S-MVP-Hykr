@@ -8,6 +8,7 @@ import {
 import { stageRoom, stageFromPrompt, getSampleBundle, analyseVastuScore, analyseVastuOverlay } from '../services/api';
 import VastuHUD from '../components/VastuHUD';
 import SectionBackdrop from '../components/SectionBackdrop';
+import CatalogSourceChoice from '../components/CatalogSourceChoice';
 import { DEMO_JOURNEY_PAYLOAD } from '../data/demoJourney';
 
 const SESSION_KEY = 'a2s-design-journey';
@@ -92,6 +93,7 @@ const DesignJourney = () => {
     const [step, setStep] = useState('mode'); // mode | rooms | style | design | plan | plan-style | plan-stage
     const [selectedRooms, setSelectedRooms] = useState(['living_room', 'bedroom', 'kitchen', 'pooja_room']);
     const [style, setStyle] = useState('modern');
+    const [catalogSource, setCatalogSource] = useState('builder');
     const [rooms, setRooms] = useState([]);     // accumulated results
     const [currentIdx, setCurrentIdx] = useState(0);
     const [uploadedFile, setUploadedFile] = useState(null);
@@ -577,6 +579,10 @@ const DesignJourney = () => {
                                 );
                             })}
                         </div>
+
+                        {/* Catalog source — builder's catalog vs bring-your-own */}
+                        <CatalogSourceChoice value={catalogSource} onChange={setCatalogSource} />
+
                         {error && (
                             <p className="text-xs text-red-700 inline-flex items-center gap-1.5">
                                 <AlertTriangle size={13} /> {error}

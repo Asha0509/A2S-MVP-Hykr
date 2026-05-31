@@ -5,6 +5,19 @@ import {
     Award, Layers, RefreshCw,
 } from 'lucide-react';
 import SectionBackdrop from '../components/SectionBackdrop';
+import RoomBreakdownModal from '../components/RoomBreakdownModal';
+
+// Map a room label to its breakdown key in ROOM_BREAKDOWN.
+const roomKeyFromLabel = (label) => {
+    const t = (label || '').toLowerCase();
+    if (t.includes('drawing')) return 'drawing_room';
+    if (t.includes('living'))  return 'living_room';
+    if (t.includes('bed'))     return 'bedroom';
+    if (t.includes('kitchen')) return 'kitchen';
+    if (t.includes('pooja'))   return 'pooja_room';
+    if (t.includes('study'))   return 'study';
+    return 'living_room';
+};
 
 /**
  * /instant — the magic prompt-to-home feature.
@@ -152,6 +165,7 @@ const InstantDesign = () => {
     const [running, setRunning] = useState(false);
     const [stage, setStage] = useState(0);
     const [result, setResult] = useState(null);
+    const [drillRoom, setDrillRoom] = useState(null);
     const timerRef = useRef(null);
 
     useEffect(() => () => clearInterval(timerRef.current), []);
@@ -312,13 +326,27 @@ const InstantDesign = () => {
 
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             {result.rooms.map((r, idx) => (
-                                <div key={idx} className="rounded-2xl overflow-hidden bg-main border border-premium">
-                                    <img src={r.img} alt={r.label} className="w-full aspect-[4/3] object-cover" />
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setDrillRoom(roomKeyFromLabel(r.label))}
+                                    className="group text-left rounded-2xl overflow-hidden bg-main border border-premium hover:border-accent transition relative"
+                                >
+                                    <div className="relative">
+                                        <img src={r.img} alt={r.label} className="w-full aspect-[4/3] object-cover" />
+                                        <div className="absolute inset-0 flex items-end justify-center pb-3 opacity-0 group-hover:opacity-100 transition"
+                                             style={{ background: 'linear-gradient(180deg, transparent 55%, rgba(15,27,34,0.8))' }}>
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                                  style={{ background: '#B8763D', color: '#0F1B22' }}>
+                                                <Layers size={11} /> View breakdown
+                                            </span>
+                                        </div>
+                                    </div>
                                     <div className="p-3">
                                         <p className="font-semibold text-main text-sm">{r.label}</p>
-                                        <p className="text-xs text-accent font-semibold mt-0.5">{fmt(r.cost)}</p>
+                                        <p className="text-xs text-accent font-semibold mt-0.5">{fmt(r.cost)} · tap to itemise</p>
                                     </div>
-                                </div>
+                                </button>
                             ))}
                         </div>
 
@@ -364,6 +392,10 @@ const InstantDesign = () => {
                     ))}
                 </div>
             </section>
+
+            {drillRoom && (
+                <RoomBreakdownModal roomKey={drillRoom} onClose={() => setDrillRoom(null)} />
+            )}
         </div>
     );
 };
