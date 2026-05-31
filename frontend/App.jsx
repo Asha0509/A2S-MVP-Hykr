@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, Navigate, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -111,6 +111,35 @@ const useEmbedMode = () => {
     return embedParam || inIframe;
 };
 
+// Buyer-experience routes where standalone usage = a "preview" of what a
+// builder would embed. Marketing/B2B routes (/, /builder, /pricing, etc.)
+// are NOT preview surfaces, so they're excluded.
+const PREVIEW_ROUTES = new Set(['/instant', '/design', '/design/summary', '/vastu-hud', '/showcase', '/dashboard']);
+
+// Thin strip clarifying that standalone consumer usage is a preview of the
+// builder-embedded product — not a contradiction of the B2B model. Hidden
+// inside an embed (already in a builder context) and when the session is
+// attributed to a builder via ?builderId.
+const PreviewBanner = ({ embed }) => {
+    const { pathname } = useLocation();
+    if (embed || !PREVIEW_ROUTES.has(pathname)) return null;
+    let attributed = false;
+    try { attributed = !!localStorage.getItem('a2s-attributed-builder'); } catch (_) {}
+    if (attributed) return null;
+    return (
+        <div
+            className="w-full text-center text-[11px] sm:text-xs font-semibold tracking-wide px-4 py-2"
+            style={{ background: 'linear-gradient(90deg, #0F1B22, #1D6172)', color: '#F4EBDD', borderBottom: '1px solid rgba(184,118,61,0.4)' }}
+        >
+            <span style={{ color: '#E8C896' }}>Preview mode.</span>{' '}
+            This is the buyer experience builders embed on their projects.{' '}
+            <Link to="/builder" style={{ color: '#E8C896', textDecoration: 'underline' }}>
+                Run A2S on your project →
+            </Link>
+        </div>
+    );
+};
+
 // Branded loading fallback for Suspense
 const PageLoader = () => (
     <div className="min-h-screen bg-main flex flex-col items-center justify-center gap-6 transition-all duration-500">
@@ -140,6 +169,7 @@ const Shell = () => {
     return (
         <div className="flex flex-col min-h-screen">
             {!embed && <Navbar />}
+            <PreviewBanner embed={embed} />
             <main className="flex-grow">
                 <Suspense fallback={<PageLoader />}>
                     <Routes>
