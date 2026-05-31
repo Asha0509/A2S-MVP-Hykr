@@ -4,6 +4,7 @@ import {
     ArrowRight, Layers, Award, Building2, Eye,
     IndianRupee, Wand2, Tag,
 } from 'lucide-react';
+import CinematicHero from '../components/CinematicHero';
 
 const Stat = ({ value, label, sub }) => (
     <div>
@@ -23,8 +24,48 @@ const Pillar = ({ icon: Icon, title, body }) => (
     </div>
 );
 
-// Illustrative visual for the buyer-journey frames. SVG, no stock photos.
+// Real cached FLUX renders for the buyer-journey frame strip. Generated
+// via Pollinations.ai (FLUX backend) and committed as static assets.
 const FrameVisual = ({ kind }) => {
+    if (kind === 'upload')  return <FrameImage src="/showcase/empty-living.jpg"   alt="Empty room — buyer upload" badge="UPLOADED PHOTO" />;
+    if (kind === 'stage')   return <FrameImage src="/showcase/living-modern.jpg"  alt="FLUX-staged living room"   badge="FLUX-1 RENDER" />;
+    if (kind === 'vastu')   return <FrameImage src="/showcase/bedroom-contemporary.jpg" alt="Vastu HUD overlay" badge="VASTU HUD" overlay />;
+    return null;
+};
+
+const FrameImage = ({ src, alt, badge, overlay = false }) => (
+    <div className="relative w-full h-full">
+        <img src={src} alt={alt} className="w-full h-full object-cover" />
+        {overlay && (
+            <>
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'rgba(15,27,34,0.18)' }} />
+                {/* compass */}
+                <div className="absolute top-3 right-3 w-12 h-12 rounded-full flex flex-col items-center justify-center"
+                     style={{ background: 'rgba(15,27,34,0.85)', border: '1.5px solid #B8763D', backdropFilter: 'blur(8px)' }}>
+                    <span className="text-[8px] font-bold" style={{ color: '#B8763D' }}>N</span>
+                    <div className="w-px h-3 mt-0.5" style={{ background: '#B8763D' }} />
+                </div>
+                {/* pins */}
+                <div className="absolute" style={{ top: '42%', left: '24%' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white"
+                         style={{ background: '#dc2626', border: '2px solid #7f1d1d', boxShadow: '0 0 0 8px rgba(220,38,38,0.2)' }}>1</div>
+                </div>
+                <div className="absolute" style={{ top: '58%', right: '28%' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white"
+                         style={{ background: '#f59e0b', border: '2px solid #92400e', boxShadow: '0 0 0 8px rgba(245,158,11,0.2)' }}>2</div>
+                </div>
+            </>
+        )}
+        <div className="absolute bottom-3 left-3 right-3 px-3 py-1.5 rounded-md text-[10px] font-bold tracking-[0.25em] text-center"
+             style={{ background: 'rgba(15,27,34,0.85)', color: '#B8763D', backdropFilter: 'blur(6px)' }}>
+            {badge}
+        </div>
+    </div>
+);
+
+// Legacy SVG-illustrated visual (kept for fallback if image fails to load).
+// Not currently invoked from the live page.
+const FrameVisualSVG = ({ kind }) => {
     if (kind === 'upload') {
         return (
             <svg viewBox="0 0 400 240" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
@@ -134,58 +175,15 @@ const FrameCard = ({ stepLabel, title, description, visualKind }) => (
 const Home = () => {
     return (
         <div className="min-h-screen bg-main">
-            {/* Hero */}
-            <section className="relative overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[80px]" />
-                </div>
+            <CinematicHero />
 
-                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-12 sm:pb-16">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase mb-5 sm:mb-6">
-                        AI infrastructure · For Indian builders
-                    </div>
-
-                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-7xl font-black text-main leading-[1.05] italic max-w-4xl">
-                        Every flat you sell <br className="hidden sm:block" />
-                        ships with an <span className="text-accent">AI interior designer</span>.
-                    </h1>
-
-                    <p className="mt-5 sm:mt-6 text-sm sm:text-lg text-muted max-w-2xl leading-relaxed">
-                        Builders embed A2S on their project landing page. Their buyers design every room of their future home —
-                        AI-staged, Vastu-scored, with a complete shopping list from the brands the builder already has deals with.
-                        A2S handles the experience. The builder earns the commission.
-                    </p>
-
-                    <div className="mt-7 sm:mt-8 flex flex-col sm:flex-row gap-3">
-                        <Link
-                            to="/builder"
-                            style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold hover:opacity-90"
-                        >
-                            <Building2 size={16} /> Builder workspace
-                            <ArrowRight size={15} />
-                        </Link>
-                        <Link
-                            to="/embed-demo"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-accent px-6 py-3.5 text-sm font-semibold text-accent hover:bg-accent/5"
-                        >
-                            <Eye size={16} /> See it embedded
-                        </Link>
-                        <Link
-                            to="/design"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold text-muted hover:text-main"
-                        >
-                            <Layers size={16} /> Try the buyer journey
-                        </Link>
-                    </div>
-
-                    <div className="mt-10 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
-                        <Stat value="9"      label="Vendor brands" sub="IKEA · HomeLane · Pepperfry +6" />
-                        <Stat value="6"      label="Design styles" sub="Modern → Ethnic" />
-                        <Stat value="4"      label="Rooms in flow" sub="Living · Bedroom · Kitchen · Pooja" />
-                        <Stat value="100"    label="Vastu points"  sub="Auto-scored, on the photo" />
-                    </div>
+            {/* Stat strip — sits between cinematic hero and the journey frames */}
+            <section className="bg-surface border-b border-premium">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+                    <Stat value="9"   label="Vendor brands" sub="IKEA · HomeLane · Pepperfry +6" />
+                    <Stat value="6"   label="Design styles" sub="Modern → Ethnic" />
+                    <Stat value="4"   label="Rooms in flow" sub="Living · Bedroom · Kitchen · Pooja" />
+                    <Stat value="100" label="Vastu points"  sub="Auto-scored, on the photo" />
                 </div>
             </section>
 
