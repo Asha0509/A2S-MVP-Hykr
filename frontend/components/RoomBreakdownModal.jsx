@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
     X, IndianRupee, Award, Check, Repeat, Sparkles, Tag, Info, Palette,
 } from 'lucide-react';
-import { ROOM_BREAKDOWN, COLOR_PRESETS } from '../data/roomBreakdown';
+import { ROOM_BREAKDOWN, COLOR_PRESETS, CATEGORY_ORDER } from '../data/roomBreakdown';
 
 /**
  * Room drill-down modal — the on-screen proof that an A2S render is a
@@ -38,6 +38,19 @@ const RoomBreakdownModal = ({ roomKey, onClose }) => {
     const colorHex = COLOR_PRESETS.find((c) => c.id === color)?.hex;
 
     const fmt = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
+
+    // Group items by category in the canonical order, for the spec view.
+    const grouped = useMemo(() => {
+        const byCat = {};
+        room.items.forEach((it) => { (byCat[it.cat] = byCat[it.cat] || []).push(it); });
+        const cats = CATEGORY_ORDER.filter((c) => byCat[c]);
+        Object.keys(byCat).forEach((c) => { if (!cats.includes(c)) cats.push(c); });
+        return cats.map((c) => ({
+            cat: c,
+            items: byCat[c],
+            subtotal: byCat[c].reduce((s, it) => s + effective(it).price, 0),
+        }));
+    }, [room, swapped]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-6"
@@ -113,8 +126,14 @@ const RoomBreakdownModal = ({ roomKey, onClose }) => {
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-2">
-                        {room.items.map((it) => {
+                    <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-4">
+                        {grouped.map((group) => (
+                        <div key={group.cat} className="space-y-2">
+                            <div className="flex items-center justify-between px-1 pt-1">
+                                <span className="text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color: '#B8763D' }}>{group.cat}</span>
+                                <span className="text-[11px] font-semibold" style={{ color: 'rgba(244,235,221,0.55)' }}>{fmt(group.subtotal)}</span>
+                            </div>
+                        {group.items.map((it) => {
                             const eff = effective(it);
                             const isOpen = openItem === it.id;
                             const isSwapped = !!swapped[it.id];
@@ -193,6 +212,8 @@ const RoomBreakdownModal = ({ roomKey, onClose }) => {
                                 </div>
                             );
                         })}
+                        </div>
+                        ))}
                     </div>
 
                     {/* Footer total */}

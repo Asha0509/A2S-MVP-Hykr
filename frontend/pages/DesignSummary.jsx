@@ -13,7 +13,12 @@ import {
     ShoppingBag,
     ArrowRight,
     Award,
+    Layers,
+    Repeat,
 } from 'lucide-react';
+import { ROOM_BREAKDOWN, roomBaseTotal } from '../data/roomBreakdown';
+import { fallbackVastuOverlay } from '../data/vastuFallback';
+import RoomBreakdownModal from '../components/RoomBreakdownModal';
 
 const STORAGE_KEY = 'a2s-design-journey';
 
@@ -120,13 +125,25 @@ const CatalogItemCard = ({ item }) => {
     );
 };
 
-const RoomCard = ({ room }) => {
+const RoomCard = ({ room, onDrill }) => {
     const [expanded, setExpanded] = useState(false);
-    const items = room?.catalogBundle?.items || [];
-    const totalEstimate = room?.catalogBundle?.totalEstimate || 0;
+    // Prefer the live catalog bundle; if it's empty (no backend catalog),
+    // fall back to the rich finishes-level spec so the card is never blank/₹0.
+    const spec = ROOM_BREAKDOWN[room.roomType];
+    const liveItems = room?.catalogBundle?.items || [];
+    const items = liveItems.length
+        ? liveItems
+        : (spec?.items || []).map((it) => ({ id: it.id, name: it.name, brand: it.brand, price: it.price, cat: it.cat }));
+    const totalEstimate = Number(room?.catalogBundle?.totalEstimate) > 0
+        ? Number(room.catalogBundle.totalEstimate)
+        : roomBaseTotal(room.roomType);
     const previewItems = items.slice(0, 3);
     const restItems = items.slice(3);
-    const band = getVastuBand(room?.vastuScore);
+    // Guarantee a Vastu overlay (score + reasoning) even if the journey/demo
+    // didn't attach one for this room.
+    const overlay = room?.vastuOverlay || fallbackVastuOverlay(room.roomType, room.facing);
+    const vScore = room?.vastuScore ?? overlay?.score;
+    const band = getVastuBand(vScore);
     const headingId = `room-${room.roomType}-heading`;
 
     return (
@@ -179,7 +196,7 @@ const RoomCard = ({ room }) => {
                     {band && (
                         <span
                             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${band.bgClass} ${band.borderClass} ${band.textClass}`}
-                            aria-label={`Vastu score ${room.vastuScore} out of 100 — ${band.label}`}
+                            aria-label={`Vastu score ${vScore} out of 100 — ${band.label}`}
                         >
                             <span
                                 aria-hidden="true"
@@ -189,12 +206,12 @@ const RoomCard = ({ room }) => {
                             {band.label === 'Excellent Vastu' && (
                                 <Award size={14} aria-hidden="true" />
                             )}
-                            Vastu {room.vastuScore ?? '—'} · {band.label}
+                            Vastu {vScore ?? '—'} · {band.label}
                         </span>
                     )}
                 </div>
 
-                {room?.vastuOverlay?.violations?.length > 0 && (
+                {overlay?.violations?.length > 0 && (
                     <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
                         <div className="flex items-center gap-2">
                             <Award size={14} className="text-accent" />
@@ -202,11 +219,11 @@ const RoomCard = ({ room }) => {
                                 Vastu HUD findings
                             </span>
                         </div>
-                        {room.vastuOverlay.summary && (
-                            <p className="text-sm text-main leading-relaxed italic">{room.vastuOverlay.summary}</p>
+                        {overlay.summary && (
+                            <p className="text-sm text-main leading-relaxed italic">{overlay.summary}</p>
                         )}
                         <ul className="space-y-2">
-                            {room.vastuOverlay.violations.slice(0, 3).map((v, idx) => {
+                            {overlay.violations.slice(0, 3).map((v, idx) => {
                                 const sev = v.severity || 'medium';
                                 const sevColor = sev === 'high' ? '#dc2626' : sev === 'medium' ? '#f59e0b' : '#16a34a';
                                 return (
@@ -227,13 +244,23 @@ const RoomCard = ({ room }) => {
                                 );
                             })}
                         </ul>
-                        {room.vastuOverlay.violations.length > 3 && (
+                        {overlay.violations.length > 3 && (
                             <p className="text-[11px] text-muted">
-                                + {room.vastuOverlay.violations.length - 3} more · open <span className="text-accent font-semibold">/vastu-hud</span> to see them drawn on the photo
+                                + {overlay.violations.length - 3} more · open <span className="text-accent font-semibold">/vastu-hud</span> to see them drawn on the photo
                             </p>
                         )}
                     </div>
                 )}
+
+                {/* Full finishes-level breakdown + swap */}
+                <button
+                    type="button"
+                    onClick={() => onDrill && onDrill(room.roomType)}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-accent text-accent font-semibold py-2.5 text-sm hover:bg-accent/5"
+                >
+                    <Layers size={15} /> Full breakdown — paint to decor
+                    <Repeat size={13} /> swap &amp; re-price
+                </button>
 
                 <div>
                     <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
@@ -310,6 +337,7 @@ const DesignSummary = () => {
     const navigate = useNavigate();
     const [journey, setJourney] = useState(null);
     const [loaded, setLoaded] = useState(false);
+    const [drillRoom, setDrillRoom] = useState(null);
 
     useEffect(() => {
         try {
@@ -339,7 +367,11 @@ const DesignSummary = () => {
         const perRoom = journey.rooms.map((room) => ({
             roomType: room.roomType,
             roomLabel: room.roomLabel || room.roomType,
-            total: Number(room?.catalogBundle?.totalEstimate || 0),
+            // Live bundle total if present, else the rich finishes-level spec —
+            // so the rollup is never ₹0.
+            total: Number(room?.catalogBundle?.totalEstimate) > 0
+                ? Number(room.catalogBundle.totalEstimate)
+                : roomBaseTotal(room.roomType),
         }));
         const total = perRoom.reduce((sum, r) => sum + r.total, 0);
         const emi = Math.round(total / 36);
@@ -487,6 +519,7 @@ const DesignSummary = () => {
                             <RoomCard
                                 key={`${room.roomType}-${idx}`}
                                 room={room}
+                                onDrill={setDrillRoom}
                             />
                         ))}
                     </div>
@@ -538,6 +571,10 @@ const DesignSummary = () => {
                     </div>
                 </section>
             </div>
+
+            {drillRoom && (
+                <RoomBreakdownModal roomKey={drillRoom} onClose={() => setDrillRoom(null)} />
+            )}
         </main>
     );
 };
