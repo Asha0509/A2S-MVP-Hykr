@@ -222,6 +222,12 @@ const calcBundle = (roomKey) => {
     return { roomType: roomKey, style: 'contemporary', items, totalEstimate, currency: 'INR' };
 };
 
+// Real photoreal FLUX renders cached as static assets in /public/showcase.
+// Generated via Pollinations.ai (FLUX backend) at /public/showcase/*.jpg.
+// "After" = the AI-staged room. "Before" = empty unfurnished render of the
+// same room type (raw possession state).
+const r = (path) => `/showcase/${path}`;
+
 export const DEMO_JOURNEY_PAYLOAD = {
     builderId: 'westwood-demo',
     builderName: 'Westwood Realty',
@@ -231,28 +237,32 @@ export const DEMO_JOURNEY_PAYLOAD = {
     rooms: [
         {
             roomType: 'living_room', roomLabel: 'Living Room',
-            beforeDataUrl: BEFORE_LIVING, afterDataUrl: AFTER_LIVING,
+            beforeDataUrl: r('empty-living.jpg'),
+            afterDataUrl:  r('living-modern.jpg'),
             vastuScore: 78, vastuBand: 'Good',
             vastuOverlay: SAMPLE_VASTU_OVERLAY.living_room,
             catalogBundle: calcBundle('living_room'),
         },
         {
             roomType: 'bedroom', roomLabel: 'Master Bedroom',
-            beforeDataUrl: BEFORE_BEDROOM, afterDataUrl: AFTER_BEDROOM,
+            beforeDataUrl: r('empty-bedroom.jpg'),
+            afterDataUrl:  r('bedroom-contemporary.jpg'),
             vastuScore: 84, vastuBand: 'Good',
             vastuOverlay: SAMPLE_VASTU_OVERLAY.bedroom,
             catalogBundle: calcBundle('bedroom'),
         },
         {
             roomType: 'kitchen', roomLabel: 'Kitchen',
-            beforeDataUrl: BEFORE_KITCHEN, afterDataUrl: AFTER_KITCHEN,
+            beforeDataUrl: r('empty-kitchen.jpg'),
+            afterDataUrl:  r('kitchen-functional.jpg'),
             vastuScore: 71, vastuBand: 'Good',
             vastuOverlay: SAMPLE_VASTU_OVERLAY.kitchen,
             catalogBundle: calcBundle('kitchen'),
         },
         {
             roomType: 'pooja_room', roomLabel: 'Pooja Room',
-            beforeDataUrl: BEFORE_POOJA, afterDataUrl: AFTER_POOJA,
+            beforeDataUrl: r('empty-pooja.jpg'),
+            afterDataUrl:  r('pooja-classic.jpg'),
             vastuScore: 92, vastuBand: 'Excellent Vastu',
             vastuOverlay: SAMPLE_VASTU_OVERLAY.pooja_room,
             catalogBundle: calcBundle('pooja_room'),
