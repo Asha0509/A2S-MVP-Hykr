@@ -252,6 +252,18 @@ const RoomCard = ({ room, onDrill }) => {
                     </div>
                 )}
 
+                {/* Improve CTA — surfaces when the room isn't yet Excellent */}
+                {(vScore ?? 100) < 85 && (
+                    <Link
+                        to="/vastu-hud"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-on-accent"
+                        style={{ background: 'var(--accent)' }}
+                    >
+                        <Award size={15} /> Improve this room — open the Vastu HUD
+                        <ArrowRight size={14} />
+                    </Link>
+                )}
+
                 {/* Full finishes-level breakdown + swap */}
                 <button
                     type="button"

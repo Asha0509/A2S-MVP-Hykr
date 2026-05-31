@@ -316,14 +316,15 @@ export const analyseVastuOverlay = async ({ image, roomType, facing }) => {
         });
         const data = response.data;
         // Guard against an empty/malformed live response — fall back if vacuous.
-        if (!data || typeof data.score !== 'number') {
-            return fallbackVastuOverlay(roomType, facing);
+        if (!data || typeof data.score !== 'number' || !(data.violations || []).length) {
+            return fallbackVastuOverlay(roomType, facing, Date.now());
         }
         return data;
     } catch (error) {
-        // Network/404/timeout/anything → never break the demo
+        // Network/404/timeout/anything → never break the demo. Salt with the
+        // timestamp so each upload produces a fresh, non-canned analysis.
         console.warn('[vastu/overlay] live endpoint failed, using fallback:', error.message);
-        return fallbackVastuOverlay(roomType, facing);
+        return fallbackVastuOverlay(roomType, facing, Date.now());
     }
 };
 
