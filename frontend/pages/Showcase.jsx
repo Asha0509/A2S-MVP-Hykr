@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Award, X, ArrowRight, Sparkles, Image as ImageIcon, Compass, Move3D } from 'lucide-react';
 import VastuHUD from '../components/VastuHUD';
 import Walkthrough3D from '../components/Walkthrough3D';
+import ShoppableImage, { HOTSPOT_LIBRARY } from '../components/ShoppableImage';
 
 /**
  * Showcase — hand-curated before/after gallery.
@@ -326,15 +327,29 @@ const ScoreBadge = ({ score, band }) => {
 
 const ShowcaseCard = ({ item, onExpand, onWalkthrough }) => {
     const [showAfter, setShowAfter] = useState(true);
+    // Map cached image filename to hotspot library entry
+    const slug = (item.after || '').split('/').pop().replace('.jpg', '');
+    const hotspots = HOTSPOT_LIBRARY[slug] || [];
+    const showShoppable = showAfter && hotspots.length > 0;
     return (
         <article className="rounded-3xl overflow-hidden bg-surface border border-premium shadow-premium flex flex-col">
             {/* Visual */}
             <div className="relative aspect-[3/2] bg-black/5">
-                <img
-                    src={showAfter ? item.after : item.before}
-                    alt={`${item.label} ${showAfter ? 'after staging' : 'before staging'}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
+                {showShoppable ? (
+                    <ShoppableImage
+                        src={item.after}
+                        alt={`${item.label} after staging — shoppable`}
+                        hotspots={hotspots}
+                        aspectRatio="3/2"
+                        className="absolute inset-0 w-full h-full"
+                    />
+                ) : (
+                    <img
+                        src={showAfter ? item.after : item.before}
+                        alt={`${item.label} ${showAfter ? 'after staging' : 'before staging'}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                )}
                 {/* Before/After toggle */}
                 <div className="absolute top-3 left-3 inline-flex items-center rounded-full bg-black/60 backdrop-blur-md p-1 text-[10px] font-black uppercase tracking-widest">
                     <button

@@ -5,6 +5,7 @@ import {
     ArrowRight, ExternalLink, RefreshCw, Tag, Save, Calculator, IndianRupee,
 } from 'lucide-react';
 import SectionBackdrop from '../components/SectionBackdrop';
+import DemandHeatmap from '../components/DemandHeatmap';
 
 const STORAGE_KEY = 'a2s-builder-account';
 
@@ -278,6 +279,9 @@ const BuilderPortal = () => {
                 <div className="rounded-xl bg-accent/5 border border-accent/20 px-4 py-3 -mt-4 text-xs text-muted">
                     <span className="text-accent font-semibold">Workspace just created.</span> Your dashboard fills in as buyers engage with your embed — no fake numbers shown.
                 </div>
+
+                {/* Demand heatmap — shows pre-existing 7,200 waitlist by city */}
+                <DemandHeatmap totalSignups={7200} />
 
                 {/* Embed block */}
                 <div className="rounded-2xl bg-surface border border-premium p-6 space-y-5">
