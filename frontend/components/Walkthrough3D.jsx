@@ -21,10 +21,13 @@ import { Maximize2, Move3D, X, Sun, Lightbulb } from 'lucide-react';
 
 const Walkthrough3D = ({ imageSrc, label, onClose }) => {
     const containerRef = useRef(null);
-    const [panX, setPanX] = useState(0);            // -180..180 degrees of pan
+    const [panX, setPanX] = useState(0);            // -90..90 horizontal look
+    const [panY, setPanY] = useState(0);            // -20..20 vertical look
     const [zoom, setZoom] = useState(1);
     const [lighting, setLighting] = useState('warm');  // warm | day | dusk
-    const dragRef = useRef({ active: false, startX: 0, startPan: 0 });
+    const [autoDrift, setAutoDrift] = useState(true);  // ambient camera drift when idle
+    const dragRef = useRef({ active: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
+    const driftRef = useRef(0);
 
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
@@ -32,29 +35,57 @@ const Walkthrough3D = ({ imageSrc, label, onClose }) => {
         return () => window.removeEventListener('keydown', onKey);
     }, [onClose]);
 
+    // Ambient auto-drift — slow sinusoidal pan so the room "breathes" when
+    // the user isn't interacting. Stops the moment they grab it.
+    useEffect(() => {
+        if (!autoDrift) return;
+        let raf = 0;
+        const start = performance.now();
+        const loop = (now) => {
+            if (!dragRef.current.active) {
+                const t = (now - start) / 1000;
+                setPanX(Math.sin(t * 0.28) * 26);
+                setPanY(Math.sin(t * 0.18) * 6);
+            }
+            raf = requestAnimationFrame(loop);
+        };
+        raf = requestAnimationFrame(loop);
+        driftRef.current = raf;
+        return () => cancelAnimationFrame(raf);
+    }, [autoDrift]);
+
+    const stopDrift = () => { if (autoDrift) setAutoDrift(false); };
+
     const onMouseDown = (e) => {
-        dragRef.current = { active: true, startX: e.clientX, startPan: panX };
+        stopDrift();
+        dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, startPanX: panX, startPanY: panY };
     };
     const onMouseMove = (e) => {
         if (!dragRef.current.active) return;
         const dx = e.clientX - dragRef.current.startX;
-        const newPan = dragRef.current.startPan + dx * 0.4;
-        setPanX(Math.max(-90, Math.min(90, newPan)));
+        const dy = e.clientY - dragRef.current.startY;
+        setPanX(Math.max(-90, Math.min(90, dragRef.current.startPanX + dx * 0.42)));
+        setPanY(Math.max(-20, Math.min(20, dragRef.current.startPanY + dy * 0.12)));
     };
     const onMouseUp = () => { dragRef.current.active = false; };
     const onWheel = (e) => {
         e.preventDefault();
-        setZoom((z) => Math.max(0.85, Math.min(1.6, z - e.deltaY * 0.0008)));
+        stopDrift();
+        setZoom((z) => Math.max(0.85, Math.min(1.7, z - e.deltaY * 0.0009)));
     };
+    const resetView = () => { setPanX(0); setPanY(0); setZoom(1); };
 
     const onTouchStart = (e) => {
         if (e.touches.length !== 1) return;
-        dragRef.current = { active: true, startX: e.touches[0].clientX, startPan: panX };
+        stopDrift();
+        dragRef.current = { active: true, startX: e.touches[0].clientX, startY: e.touches[0].clientY, startPanX: panX, startPanY: panY };
     };
     const onTouchMove = (e) => {
         if (!dragRef.current.active || e.touches.length !== 1) return;
         const dx = e.touches[0].clientX - dragRef.current.startX;
-        setPanX(Math.max(-90, Math.min(90, dragRef.current.startPan + dx * 0.4)));
+        const dy = e.touches[0].clientY - dragRef.current.startY;
+        setPanX(Math.max(-90, Math.min(90, dragRef.current.startPanX + dx * 0.42)));
+        setPanY(Math.max(-20, Math.min(20, dragRef.current.startPanY + dy * 0.12)));
     };
 
     const lightingFilter = {
@@ -80,15 +111,25 @@ const Walkthrough3D = ({ imageSrc, label, onClose }) => {
                         <p className="font-serif italic font-black text-lg" style={{ color: '#F4EBDD' }}>{label}</p>
                     </div>
                 </div>
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="rounded-full w-10 h-10 flex items-center justify-center"
-                    style={{ background: 'rgba(244,235,221,0.08)', color: '#F4EBDD' }}
-                    aria-label="Close walkthrough"
-                >
-                    <X size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={resetView}
+                        className="rounded-full px-3 h-9 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider"
+                        style={{ background: 'rgba(244,235,221,0.08)', color: 'rgba(244,235,221,0.8)' }}
+                    >
+                        <Maximize2 size={13} /> Reset view
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-full w-10 h-10 flex items-center justify-center"
+                        style={{ background: 'rgba(244,235,221,0.08)', color: '#F4EBDD' }}
+                        aria-label="Close walkthrough"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
             </div>
 
             {/* Stage */}
@@ -102,13 +143,15 @@ const Walkthrough3D = ({ imageSrc, label, onClose }) => {
                 onWheel={onWheel}
                 style={{ perspective: '1800px' }}
             >
-                {/* Cylindrical room — rotates with pan */}
+                {/* Virtual-camera room. The image is over-scaled so panning
+                    reveals a wider scene (a real "look around" feel), with a
+                    gentle rotateY/rotateX for dimensionality. */}
                 <div
                     className="absolute inset-0"
                     style={{
                         transformStyle: 'preserve-3d',
-                        transform: `translate3d(${panX * -4}px, 0, ${(zoom - 1) * 200}px) rotateY(${panX * 0.55}deg)`,
-                        transition: dragRef.current.active ? 'none' : 'transform 320ms cubic-bezier(.2,.8,.2,1)',
+                        transform: `rotateY(${panX * 0.32}deg) rotateX(${panY * -0.4}deg)`,
+                        transition: dragRef.current.active ? 'none' : 'transform 600ms cubic-bezier(.22,.61,.36,1)',
                         willChange: 'transform',
                     }}
                 >
@@ -118,29 +161,32 @@ const Walkthrough3D = ({ imageSrc, label, onClose }) => {
                         draggable={false}
                         className="block w-full h-full object-cover"
                         style={{
-                            transform: `scale(${zoom * 1.15})`,
-                            transformOrigin: `${50 + panX * 0.4}% 50%`,
+                            // Over-scale gives headroom to pan within the scene.
+                            transform: `scale(${zoom * 1.32}) translate(${panX * -0.45}%, ${panY * -0.6}%)`,
                             filter: lightingFilter,
-                            transition: 'filter 600ms ease',
+                            transition: dragRef.current.active ? 'filter 600ms ease' : 'transform 600ms cubic-bezier(.22,.61,.36,1), filter 600ms ease',
+                            willChange: 'transform',
                         }}
                     />
-                    {/* Edge vignettes for depth illusion */}
-                    <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                            background: 'radial-gradient(ellipse at center, transparent 50%, rgba(10,17,22,0.65) 100%)',
-                        }}
-                    />
-                    {/* Floor highlight that pans at 1.2x for parallax */}
-                    <div
-                        className="absolute pointer-events-none"
-                        style={{
-                            bottom: 0, left: 0, right: 0, height: '30%',
-                            background: 'linear-gradient(180deg, transparent, rgba(184,118,61,0.18))',
-                            transform: `translateX(${panX * -1.2}px)`,
-                            transition: dragRef.current.active ? 'none' : 'transform 320ms cubic-bezier(.2,.8,.2,1)',
-                        }}
-                    />
+                    {/* Edge vignette for depth */}
+                    <div className="absolute inset-0 pointer-events-none"
+                         style={{ background: 'radial-gradient(ellipse at center, transparent 48%, rgba(10,17,22,0.7) 100%)' }} />
+                    {/* Foreground floor highlight — parallaxes faster than the scene */}
+                    <div className="absolute pointer-events-none"
+                         style={{
+                             bottom: 0, left: '-10%', right: '-10%', height: '34%',
+                             background: 'linear-gradient(180deg, transparent, rgba(184,118,61,0.20))',
+                             transform: `translate(${panX * -2.2}px, ${panY * 1.2}px)`,
+                             transition: dragRef.current.active ? 'none' : 'transform 600ms cubic-bezier(.22,.61,.36,1)',
+                         }} />
+                    {/* Top light wash — parallaxes opposite for a ceiling sense */}
+                    <div className="absolute pointer-events-none"
+                         style={{
+                             top: 0, left: '-10%', right: '-10%', height: '24%',
+                             background: 'linear-gradient(0deg, transparent, rgba(232,200,150,0.10))',
+                             transform: `translate(${panX * -1.4}px, ${panY * -0.8}px)`,
+                             transition: dragRef.current.active ? 'none' : 'transform 600ms cubic-bezier(.22,.61,.36,1)',
+                         }} />
                 </div>
 
                 {/* HUD: pan indicator + zoom hint */}
