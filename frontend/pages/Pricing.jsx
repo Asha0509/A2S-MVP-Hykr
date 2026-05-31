@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Sparkles, Shield, ArrowRight } from 'lucide-react';
+import SectionBackdrop from '../components/SectionBackdrop';
 
 const TIERS = [
     {
@@ -162,26 +163,27 @@ const TierCard = ({ tier }) => {
 const Pricing = () => {
     return (
         <div className="min-h-screen bg-main">
-            <section className="relative overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
-                </div>
-
-                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-12 text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-[0.3em] uppercase mb-6">
-                        Pricing
+            <SectionBackdrop variant="dark" minHeight="40vh">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-12 text-center">
+                    <div
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-[0.3em] uppercase mb-5"
+                        style={{ color: '#B8763D', background: 'rgba(184,118,61,0.15)', border: '1px solid rgba(184,118,61,0.35)', backdropFilter: 'blur(6px)' }}
+                    >
+                        Pricing · pilot-first
                     </div>
-
-                    <h1 className="font-serif text-4xl sm:text-6xl text-main font-black italic leading-[1.05] max-w-4xl mx-auto">
-                        Pricing that scales with <span className="text-accent">conversions</span>, not licences.
+                    <h1 className="font-serif font-black italic leading-[1.05] max-w-4xl mx-auto" style={{ fontSize: 'clamp(2.25rem, 5vw, 4.5rem)', color: '#F4EBDD' }}>
+                        Pricing that scales with <span style={{
+                            background: 'linear-gradient(90deg, #B8763D 0%, #E8C896 50%, #B8763D 100%)',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite',
+                        }}>conversions</span>, not licences.
                     </h1>
-
-                    <p className="mt-6 text-base sm:text-lg text-muted max-w-2xl mx-auto leading-relaxed">
-                        Pilot is free for our first 3 builders. After that, you pay only when buyers actually engage.
+                    <p className="mt-5 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed" style={{ color: 'rgba(244,235,221,0.78)' }}>
+                        Pilot is free for our first 3 builders. After that, you pay only when buyers actually engage with your embed.
                     </p>
                 </div>
-            </section>
+                <style>{`@keyframes a2s-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
+            </SectionBackdrop>
 
             <section className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mt-6">

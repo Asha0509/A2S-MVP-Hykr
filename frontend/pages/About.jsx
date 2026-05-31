@@ -4,6 +4,7 @@ import {
     ArrowRight, MapPin, GitBranch, Cpu, Compass, Layers, Building2,
     Mail, Github, Linkedin,
 } from 'lucide-react';
+import SectionBackdrop from '../components/SectionBackdrop';
 
 const Pillar = ({ icon: Icon, title, body }) => (
     <div className="rounded-2xl bg-surface border border-premium p-5">
@@ -30,45 +31,48 @@ const About = () => {
 
     return (
         <div className="min-h-screen bg-main">
-            <section className="relative overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
-                </div>
-
-                <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-12 sm:pb-16">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] sm:text-xs font-semibold tracking-[0.25em] sm:tracking-[0.3em] uppercase mb-5 sm:mb-6">
+            <SectionBackdrop variant="dark" minHeight="55vh">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-14">
+                    <div
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-[0.3em] uppercase mb-5"
+                        style={{ color: '#B8763D', background: 'rgba(184,118,61,0.15)', border: '1px solid rgba(184,118,61,0.35)', backdropFilter: 'blur(6px)' }}
+                    >
                         Founder · Asha Jyothi Boddu
                     </div>
-
-                    <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-main font-black italic leading-[1.05] max-w-4xl">
-                        I spent <span className="text-accent">eighteen months</span> watching Indian homebuyers struggle with the same three things.
+                    <h1 className="font-serif font-black italic leading-[1.05] max-w-4xl" style={{ fontSize: 'clamp(2rem, 4.5vw, 4rem)', color: '#F4EBDD' }}>
+                        I spent <span style={{
+                            background: 'linear-gradient(90deg, #B8763D 0%, #E8C896 50%, #B8763D 100%)',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite',
+                        }}>eighteen months</span> watching Indian homebuyers struggle with the same three things.
                     </h1>
 
-                    <div className="mt-7 sm:mt-8 space-y-4 sm:space-y-5 text-sm sm:text-lg text-muted max-w-3xl leading-relaxed">
+                    <div className="mt-7 space-y-4 text-sm sm:text-base max-w-3xl leading-relaxed" style={{ color: 'rgba(244,235,221,0.78)' }}>
                         <p>
                             I started A2S in 2024 as a consumer-facing interior design service — visit the home, recommend a style,
                             source furniture, coordinate vendors. Operationally heavy. Margin-thin. I ran 30+ projects with friends
                             and family acting as the test users.
                         </p>
                         <p>
-                            What I learned, repeatedly, in every single project: <span className="text-main font-semibold">the buyer
+                            What I learned, repeatedly, in every single project: <span className="font-semibold" style={{ color: '#F4EBDD' }}>the buyer
                             had already chosen the flat before they knew how it would feel furnished, whether the layout was
                             Vastu-compliant, or what the total cost of making it livable actually was.</span> The builder had no
                             answer either. So the gap stayed open for months after possession — buyers spent on consultants, made
                             compromises, posted regrets on Reddit.
                         </p>
                         <p>
-                            A2S is the answer to that gap: <span className="text-main">close it at the point of sale</span>. Builders
+                            A2S is the answer to that gap: <span style={{ color: '#F4EBDD' }}>close it at the point of sale</span>. Builders
                             embed our buyer journey on their project landing page. Every buyer, before they sign, designs every room
                             of their unit — AI-staged, Vastu-scored, with a costed shopping list from brands the builder has deals
                             with. Builder converts more buyers. Buyer doesn't panic post-possession.
                         </p>
-                        <p className="text-main font-semibold">
+                        <p className="font-semibold" style={{ color: '#F4EBDD' }}>
                             That's the thesis. Eighteen months of operations told me to build it.
                         </p>
                     </div>
                 </div>
-            </section>
+                <style>{`@keyframes a2s-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
+            </SectionBackdrop>
 
             <section className="bg-surface border-y border-premium">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">

@@ -4,6 +4,7 @@ import {
     BookOpen, Compass, Cpu, Eye, Layers, ShieldCheck, ArrowRight,
     Database, Network, Workflow,
 } from 'lucide-react';
+import SectionBackdrop from '../components/SectionBackdrop';
 
 const VASTU_TEXTS = [
     { name: 'Brihat Samhita',          author: 'Varahamihira',  era: '6th c. CE',  scope: 'Site selection, orientation, room placement' },
@@ -56,25 +57,30 @@ const PIPELINE_STAGES = [
 
 const Methodology = () => (
     <div className="min-h-screen bg-main">
-        <section className="relative overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
-            </div>
-            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold tracking-[0.3em] uppercase mb-6">
+        <SectionBackdrop variant="midnight" minHeight="45vh">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-12">
+                <div
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-[0.3em] uppercase mb-5"
+                    style={{ color: '#B8763D', background: 'rgba(184,118,61,0.15)', border: '1px solid rgba(184,118,61,0.35)', backdropFilter: 'blur(6px)' }}
+                >
                     Methodology · how the Vastu engine works
                 </div>
-                <h1 className="font-serif text-3xl sm:text-5xl text-main font-black italic leading-[1.05] max-w-4xl">
-                    Vastu compliance is <span className="text-accent">a rule problem, not a vibe</span>. We treat it like one.
+                <h1 className="font-serif font-black italic leading-[1.05] max-w-4xl" style={{ fontSize: 'clamp(2rem, 4.5vw, 4rem)', color: '#F4EBDD' }}>
+                    Vastu compliance is <span style={{
+                        background: 'linear-gradient(90deg, #B8763D 0%, #E8C896 50%, #B8763D 100%)',
+                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                        backgroundSize: '200% 100%', animation: 'a2s-shimmer 6s linear infinite',
+                    }}>a rule problem, not a vibe</span>. We treat it like one.
                 </h1>
-                <p className="mt-6 text-base sm:text-lg text-muted max-w-3xl leading-relaxed">
+                <p className="mt-5 text-sm sm:text-base max-w-3xl leading-relaxed" style={{ color: 'rgba(244,235,221,0.78)' }}>
                     Most "AI Vastu" apps prompt an LLM and ship whatever it returns. Ours has the rule corpus
                     encoded explicitly, scores deterministically against weighted rules, and uses the LLM only
                     where reasoning is required — never as the source of truth. Every violation in the HUD
                     cites the rule that triggered it.
                 </p>
             </div>
-        </section>
+            <style>{`@keyframes a2s-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }`}</style>
+        </SectionBackdrop>
 
         <section className="bg-surface border-y border-premium">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
